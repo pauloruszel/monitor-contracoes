@@ -19,6 +19,7 @@ describe('storage', () => {
       doulaPhone: '5521981688856',
       alertsEnabled: false,
       lastAlertKey: '',
+      sharedSession: null,
       warningSignals: {
         mucusPlug: false,
         watersBroken: false,
@@ -44,6 +45,7 @@ describe('storage', () => {
       doulaPhone: '5521981688856',
       alertsEnabled: false,
       lastAlertKey: '',
+      sharedSession: null,
       warningSignals: {
         mucusPlug: false,
         watersBroken: false,

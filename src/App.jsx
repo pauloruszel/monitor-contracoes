@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+﻿import React, { useEffect, useMemo, useRef, useState } from 'react'
 import CurrentContractionCard from './components/CurrentContractionCard'
 import MetricsCard from './components/MetricsCard'
 import RecommendationCard from './components/RecommendationCardV2'
@@ -91,10 +91,32 @@ function MonitorPage() {
   const [historyOpen, setHistoryOpen] = useState(false)
   const [syncStatus, setSyncStatus] = useState('')
   const [now, setNow] = useState(Date.now())
+  const [installPromptEvent, setInstallPromptEvent] = useState(null)
+  const [installFeedback, setInstallFeedback] = useState('')
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000)
     return () => window.clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    const onBeforeInstallPrompt = (event) => {
+      event.preventDefault()
+      setInstallPromptEvent(event)
+    }
+
+    const onInstalled = () => {
+      setInstallFeedback('App instalado na tela inicial.')
+      setInstallPromptEvent(null)
+    }
+
+    window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt)
+    window.addEventListener('appinstalled', onInstalled)
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt)
+      window.removeEventListener('appinstalled', onInstalled)
+    }
   }, [])
 
   useEffect(() => {
@@ -201,6 +223,19 @@ function MonitorPage() {
     const nextValue = !alertsEnabled
     if (nextValue) await requestNotificationPermission()
     setAlertsEnabled(nextValue)
+  }
+
+  const handleInstallApp = async () => {
+    if (!installPromptEvent) return
+
+    await installPromptEvent.prompt()
+    const choice = await installPromptEvent.userChoice
+
+    if (choice.outcome === 'accepted') {
+      setInstallFeedback('Instalação iniciada. Confirme no sistema se necessário.')
+    }
+
+    setInstallPromptEvent(null)
   }
 
   const handleResetData = () => {
@@ -361,6 +396,11 @@ function MonitorPage() {
             <button className="button button-manual" onClick={() => setManualOpen(true)}>
               Como usar
             </button>
+            {installPromptEvent ? (
+              <button className="button button-install" onClick={handleInstallApp}>
+                Instalar app
+              </button>
+            ) : null}
             <button className="button button-top-alert" onClick={handleToggleAlerts}>
               {alertsEnabled ? 'Alertas automáticos: ligados' : 'Alertas automáticos: desligados'}
             </button>
@@ -372,6 +412,7 @@ function MonitorPage() {
             Ative os alertas para receber notificação, voz e som quando a fase mudar ou houver um
             sinal importante.
           </p>
+          {installFeedback ? <p className="top-actions-help">{installFeedback}</p> : null}
         </div>
         <div className={`status-pill status-${phase.urgency}`}>{phase.label}</div>
       </header>
@@ -432,7 +473,7 @@ function MonitorPage() {
       </main>
 
       <footer className="footer-note">
-        Este app e apenas um apoio de monitoramento e nao substitui orientacao medica.
+        Este app é apenas um apoio de monitoramento e não substitui orientação médica.
       </footer>
 
       <ManualModal open={manualOpen} onClose={() => setManualOpen(false)} />
