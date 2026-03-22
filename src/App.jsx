@@ -8,6 +8,8 @@ import DoulaContactCard from './components/DoulaContactCard'
 import GuidanceCard from './components/GuidanceCard'
 import ManualModal from './components/ManualModal'
 import WarningSignalsCard from './components/WarningSignalsCard'
+import SharingCard from './components/SharingCard'
+import DoulaViewPage from './pages/DoulaViewPage'
 import {
   endContraction,
   formatClockTime,
@@ -24,6 +26,13 @@ import {
 import { getPhaseFromMetrics, getRecommendationFromPhase } from './utils/phaseRules'
 import { clearStorage, loadFromStorage, saveToStorage } from './utils/storage'
 import { getWarningSignalAssessment } from './utils/warningSignals'
+import { isSupabaseConfigured } from './lib/supabase'
+import {
+  closeSharedSession,
+  createSharedSession,
+  syncContractions,
+  syncWarningSignals,
+} from './services/sharingService'
 import {
   requestNotificationPermission,
   triggerBrowserNotification,
@@ -33,8 +42,26 @@ import {
 
 const ANALYSIS_WINDOW = 5
 const initialStored = loadFromStorage()
+const defaultWarningSignals = {
+  mucusPlug: false,
+  watersBroken: false,
+  meconium: false,
+  reducedMovement: false,
+  bleeding: false,
+  badSmellOrFever: false,
+  preterm: false,
+}
 
-function App() {
+function getShareTokenFromHash() {
+  const match = window.location.hash.match(/^#\/acompanhar\/([^/]+)$/)
+  return match ? match[1] : ''
+}
+
+function buildShareUrl(shareToken) {
+  return `${window.location.origin}${window.location.pathname}#/acompanhar/${shareToken}`
+}
+
+function MonitorPage() {
   const [contractions, setContractions] = useState(() =>
     normalizeContractions(initialStored.contractions || []),
   )
@@ -46,20 +73,23 @@ function App() {
   const [doulaPhone, setDoulaPhone] = useState(initialStored.doulaPhone || '')
   const [alertsEnabled, setAlertsEnabled] = useState(Boolean(initialStored.alertsEnabled))
   const [lastAlertKey, setLastAlertKey] = useState(initialStored.lastAlertKey || '')
+  const [sharedSession, setSharedSession] = useState(() =>
+    initialStored.sharedSession
+      ? {
+          ...initialStored.sharedSession,
+          shareUrl:
+            initialStored.sharedSession.shareUrl ||
+            buildShareUrl(initialStored.sharedSession.shareToken),
+        }
+      : null,
+  )
   const [warningSignals, setWarningSignals] = useState(
-    initialStored.warningSignals || {
-      mucusPlug: false,
-      watersBroken: false,
-      meconium: false,
-      reducedMovement: false,
-      bleeding: false,
-      badSmellOrFever: false,
-      preterm: false,
-    },
+    initialStored.warningSignals || defaultWarningSignals,
   )
   const [manualOpen, setManualOpen] = useState(false)
   const [warningSignalsOpen, setWarningSignalsOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
+  const [syncStatus, setSyncStatus] = useState('')
   const [now, setNow] = useState(Date.now())
 
   useEffect(() => {
@@ -74,9 +104,18 @@ function App() {
       doulaPhone,
       alertsEnabled,
       lastAlertKey,
+      sharedSession,
       warningSignals,
     })
-  }, [contractions, activeContraction, doulaPhone, alertsEnabled, lastAlertKey, warningSignals])
+  }, [
+    contractions,
+    activeContraction,
+    doulaPhone,
+    alertsEnabled,
+    lastAlertKey,
+    sharedSession,
+    warningSignals,
+  ])
 
   const recentContractions = useMemo(
     () => getLastItems(contractions, ANALYSIS_WINDOW),
@@ -177,15 +216,8 @@ function App() {
     setDoulaPhone('5521981688856')
     setAlertsEnabled(false)
     setLastAlertKey('')
-    setWarningSignals({
-      mucusPlug: false,
-      watersBroken: false,
-      meconium: false,
-      reducedMovement: false,
-      bleeding: false,
-      badSmellOrFever: false,
-      preterm: false,
-    })
+    setSharedSession(null)
+    setWarningSignals(defaultWarningSignals)
   }
 
   const handleToggleSignal = (key) => {
@@ -194,6 +226,76 @@ function App() {
       [key]: !current[key],
     }))
   }
+
+  const handleStartSharing = async () => {
+    try {
+      const createdSession = await createSharedSession({ doulaPhone })
+      setSharedSession({
+        ...createdSession,
+        shareUrl: buildShareUrl(createdSession.shareToken),
+      })
+      setSyncStatus('Sessão criada. Sincronizando marcações...')
+    } catch {
+      setSyncStatus('Não foi possível iniciar o compartilhamento agora.')
+    }
+  }
+
+  const handleCopyLink = async () => {
+    if (!sharedSession?.shareUrl) return
+    try {
+      await navigator.clipboard.writeText(sharedSession.shareUrl)
+      setSyncStatus('Link da doula copiado.')
+    } catch {
+      setSyncStatus('Não foi possível copiar o link automaticamente.')
+    }
+  }
+
+  const handleEndSharing = async () => {
+    if (!sharedSession) return
+    try {
+      await closeSharedSession(sharedSession)
+      setSharedSession(null)
+      setSyncStatus('Compartilhamento encerrado.')
+    } catch {
+      setSyncStatus('Não foi possível encerrar o compartilhamento agora.')
+    }
+  }
+
+  useEffect(() => {
+    if (!sharedSession || !isSupabaseConfigured) return
+
+    async function runSync() {
+      try {
+        await syncContractions(sharedSession, contractions)
+        setSyncStatus((current) =>
+          current && current.includes('Link da doula copiado')
+            ? current
+            : 'Contrações sincronizadas com a doula.',
+        )
+      } catch {
+        setSyncStatus('Falha ao sincronizar contrações.')
+      }
+    }
+
+    runSync()
+  }, [sharedSession, contractions])
+
+  useEffect(() => {
+    if (!sharedSession || !isSupabaseConfigured) return
+
+    async function runSync() {
+      try {
+        await syncWarningSignals(sharedSession, warningSignals)
+        setSyncStatus((current) =>
+          current && current.includes('Falha') ? current : 'Sinais de alerta sincronizados.',
+        )
+      } catch {
+        setSyncStatus('Falha ao sincronizar sinais de alerta.')
+      }
+    }
+
+    runSync()
+  }, [sharedSession, warningSignals])
 
   const metrics = {
     totalContractions: contractions.length,
@@ -298,6 +400,14 @@ function App() {
           open={warningSignalsOpen || warningAssessment.level === 'critical'}
           onToggleOpen={() => setWarningSignalsOpen((current) => !current)}
         />
+        <SharingCard
+          configured={isSupabaseConfigured}
+          sharedSession={sharedSession}
+          syncStatus={syncStatus}
+          onStartSharing={handleStartSharing}
+          onCopyLink={handleCopyLink}
+          onEndSharing={handleEndSharing}
+        />
         <TimelineChart
           contractions={contractions}
           averageInterval={averageInterval}
@@ -328,6 +438,22 @@ function App() {
       <ManualModal open={manualOpen} onClose={() => setManualOpen(false)} />
     </div>
   )
+}
+
+function App() {
+  const [shareToken, setShareToken] = useState(() => getShareTokenFromHash())
+
+  useEffect(() => {
+    const onHashChange = () => setShareToken(getShareTokenFromHash())
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
+
+  if (shareToken) {
+    return <DoulaViewPage shareToken={shareToken} />
+  }
+
+  return <MonitorPage />
 }
 
 export default App

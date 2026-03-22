@@ -408,6 +408,10 @@ a {
   color: #8a3c12;
 }
 
+.signal-chip-readonly {
+  cursor: default;
+}
+
 .warning-message {
   margin-top: 14px;
   font-weight: 700;
@@ -512,6 +516,32 @@ a {
   border: 1px solid #ced7e0;
   border-radius: 14px;
   background: #fff;
+}
+
+.sharing-card {
+  border-left: 6px solid #21456b;
+}
+
+.sharing-link-label {
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+.sharing-link {
+  display: block;
+  width: 100%;
+  overflow-wrap: anywhere;
+  padding: 12px;
+  border-radius: 14px;
+  background: #f5f8fc;
+  color: #21456b;
+}
+
+.sharing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
 }
 
 .guidance-grid {

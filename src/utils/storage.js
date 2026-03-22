@@ -13,6 +13,7 @@ export function loadFromStorage() {
       doulaPhone: '5521981688856',
       alertsEnabled: false,
       lastAlertKey: '',
+      sharedSession: null,
       warningSignals: {
         mucusPlug: false,
         watersBroken: false,
@@ -34,6 +35,7 @@ export function loadFromStorage() {
       doulaPhone: '5521981688856',
       alertsEnabled: false,
       lastAlertKey: '',
+      sharedSession: null,
       warningSignals: {
         mucusPlug: false,
         watersBroken: false,

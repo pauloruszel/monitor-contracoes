@@ -38,7 +38,7 @@ const signalOptions = [
   },
 ]
 
-function WarningSignalsCard({ signals, onToggleSignal, assessment, open, onToggleOpen }) {
+function WarningSignalsCard({ signals, onToggleSignal, assessment, open, onToggleOpen, readOnly = false }) {
   return (
     <section className={`card warning-card warning-card-${assessment.level}`}>
       <div className="card-header">
@@ -49,11 +49,13 @@ function WarningSignalsCard({ signals, onToggleSignal, assessment, open, onToggl
         <span className={`badge badge-${assessment.level}`}>{assessment.title}</span>
       </div>
 
-      <div className="collapsible-toggle-row">
-        <button className="button button-secondary" onClick={onToggleOpen} type="button">
-          {open ? 'Ocultar sinais' : 'Ver sinais de alerta'}
-        </button>
-      </div>
+      {!readOnly ? (
+        <div className="collapsible-toggle-row">
+          <button className="button button-secondary" onClick={onToggleOpen} type="button">
+            {open ? 'Ocultar sinais' : 'Ver sinais de alerta'}
+          </button>
+        </div>
+      ) : null}
 
       {open ? (
         <div className="warning-signals-chips">
@@ -61,8 +63,12 @@ function WarningSignalsCard({ signals, onToggleSignal, assessment, open, onToggl
             <button
               key={option.key}
               type="button"
-              className={`signal-chip ${signals[option.key] ? 'signal-chip-active' : ''}`}
-              onClick={() => onToggleSignal(option.key)}
+              className={`signal-chip ${signals[option.key] ? 'signal-chip-active' : ''} ${
+                readOnly ? 'signal-chip-readonly' : ''
+              }`}
+              onClick={() => {
+                if (!readOnly) onToggleSignal(option.key)
+              }}
               title={option.helper}
             >
               {option.label}
