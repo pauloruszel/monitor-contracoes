@@ -18,13 +18,13 @@ const zoneStops = [
 const visualOnlyPhases = ['Expulsivo', 'Placenta']
 
 const WIDTH = 100
-const HEIGHT = 158
-const plotLeft = 16
-const plotRight = 86
+const HEIGHT = 176
+const plotLeft = 13
+const plotRight = 84
 
 function getY(minutes) {
   const clamped = Math.max(0, Math.min(15, minutes))
-  return 128 - (clamped / 15) * 96
+  return 142 - (clamped / 15) * 108
 }
 
 function getX(index, total) {
@@ -53,7 +53,7 @@ function TimelineChart({ contractions, averageInterval, formatDuration, formatCl
         <span className="badge badge-muted">Tempo entre inícios</span>
       </div>
       <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="timeline-svg" role="img">
-        <rect x="10" y="12" width="80" height="118" rx="12" fill="#fff7eb" />
+        <rect x="8" y="10" width="81" height="142" rx="12" fill="#fff7eb" />
 
         {zoneStops.map((zone) => {
           const yTop = getY(zone.max)
@@ -61,15 +61,15 @@ function TimelineChart({ contractions, averageInterval, formatDuration, formatCl
           return (
             <g key={zone.label}>
               <rect
-                x="12"
+                x="10"
                 y={yTop}
-                width="76"
+                width="74"
                 height={Math.max(10, yBottom - yTop)}
                 rx="8"
                 fill={zone.color}
                 opacity="0.18"
               />
-              <text x="14" y={yTop + 10} className="timeline-zone-label">
+              <text x="12" y={yTop + 10} className="timeline-zone-label">
                 {zone.label}
               </text>
             </g>
@@ -79,14 +79,14 @@ function TimelineChart({ contractions, averageInterval, formatDuration, formatCl
         {markers.map((marker) => (
           <g key={marker.label}>
             <line
-              x1="12"
-              x2="88"
+              x1="10"
+              x2="86"
               y1={getY(marker.value)}
               y2={getY(marker.value)}
               stroke="#d0d6e0"
               strokeDasharray="2 2"
             />
-            <text x="90" y={getY(marker.value) + 4} className="timeline-axis-label">
+            <text x="88" y={getY(marker.value) + 4} className="timeline-axis-label">
               {marker.label}
             </text>
           </g>
@@ -115,8 +115,8 @@ function TimelineChart({ contractions, averageInterval, formatDuration, formatCl
 
         {markerY ? (
           <g>
-            <line x1="10" x2="90" y1={markerY} y2={markerY} stroke="#183153" strokeWidth="1.5" />
-            <text x="14" y={markerY - 4} className="timeline-current-label">
+            <line x1="8" x2="88" y1={markerY} y2={markerY} stroke="#183153" strokeWidth="1.5" />
+            <text x="12" y={markerY - 4} className="timeline-current-label">
               Média atual
             </text>
           </g>

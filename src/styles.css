@@ -439,7 +439,7 @@ a {
   height: auto;
   background: linear-gradient(180deg, #fff, #fff8ef);
   border-radius: 18px;
-  margin-top: -4px;
+  margin-top: -2px;
 }
 
 .timeline-legend {
@@ -465,8 +465,12 @@ a {
 .timeline-axis-label,
 .timeline-zone-label,
 .timeline-current-label {
-  font-size: 2.3px;
+  font-size: 2.55px;
   fill: #44576b;
+}
+
+.timeline-zone-label {
+  font-weight: 700;
 }
 
 .history-list {
@@ -605,5 +609,23 @@ a {
 
   .history-metrics {
     text-align: left;
+  }
+
+  .timeline-card {
+    padding: 16px 12px 14px;
+  }
+
+  .timeline-svg {
+    min-height: 360px;
+  }
+
+  .timeline-axis-label,
+  .timeline-zone-label,
+  .timeline-current-label {
+    font-size: 2.9px;
+  }
+
+  .legend-chip {
+    font-size: 0.74rem;
   }
 }
