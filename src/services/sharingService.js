@@ -53,6 +53,39 @@ export async function closeSharedSession(sharedSession) {
   if (error) throw error
 }
 
+export async function resetSharedSessionData(sharedSession) {
+  const { data: session, error: sessionError } = await supabase
+    .from('sessions')
+    .select('id')
+    .eq('id', sharedSession.sessionId)
+    .eq('writer_token', sharedSession.writerToken)
+    .single()
+
+  if (sessionError || !session) throw sessionError || new Error('shared_session_not_found')
+
+  const { error: contractionsError } = await supabase
+    .from('contractions')
+    .delete()
+    .eq('session_id', sharedSession.sessionId)
+
+  if (contractionsError) throw contractionsError
+
+  const { error: warningSignalsError } = await supabase
+    .from('warning_signals')
+    .delete()
+    .eq('session_id', sharedSession.sessionId)
+
+  if (warningSignalsError) throw warningSignalsError
+
+  const { error: deleteSessionError } = await supabase
+    .from('sessions')
+    .delete()
+    .eq('id', sharedSession.sessionId)
+    .eq('writer_token', sharedSession.writerToken)
+
+  if (deleteSessionError) throw deleteSessionError
+}
+
 export async function syncContractions(sharedSession, contractions) {
   if (!contractions.length) return
 

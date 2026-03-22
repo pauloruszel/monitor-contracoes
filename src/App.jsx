@@ -30,6 +30,7 @@ import { isSupabaseConfigured } from './lib/supabase'
 import {
   closeSharedSession,
   createSharedSession,
+  resetSharedSessionData,
   syncContractions,
   syncWarningSignals,
 } from './services/sharingService'
@@ -238,12 +239,25 @@ function MonitorPage() {
     setInstallPromptEvent(null)
   }
 
-  const handleResetData = () => {
+  const handleResetData = async () => {
     const confirmed = window.confirm(
-      'Tem certeza que deseja resetar todos os dados salvos? Essa ação apaga o histórico, a contração em andamento e os alertas.',
+      sharedSession
+        ? 'Tem certeza que deseja resetar todos os dados salvos? Essa ação apaga o histórico, a contração em andamento, os alertas e também remove a sessão compartilhada no banco.'
+        : 'Tem certeza que deseja resetar todos os dados salvos? Essa ação apaga o histórico, a contração em andamento e os alertas.',
     )
 
     if (!confirmed) return
+
+    if (sharedSession && isSupabaseConfigured) {
+      try {
+        await resetSharedSessionData(sharedSession)
+      } catch {
+        window.alert(
+          'Não foi possível apagar os dados compartilhados no banco agora. Seus dados locais foram mantidos para evitar inconsistência. Tente novamente com internet ativa.',
+        )
+        return
+      }
+    }
 
     clearStorage()
     setContractions([])
@@ -253,6 +267,7 @@ function MonitorPage() {
     setLastAlertKey('')
     setSharedSession(null)
     setWarningSignals(defaultWarningSignals)
+    setSyncStatus(sharedSession ? 'Dados locais e compartilhados apagados.' : '')
   }
 
   const handleToggleSignal = (key) => {
