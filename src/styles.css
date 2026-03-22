@@ -75,6 +75,10 @@ a {
   max-width: 64ch;
 }
 
+.top-actions-help + .top-actions-help {
+  margin-top: 6px;
+}
+
 .status-pill {
   padding: 10px 14px;
   border-radius: 999px;

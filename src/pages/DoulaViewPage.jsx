@@ -3,6 +3,7 @@ import MetricsCard from '../components/MetricsCard'
 import RecommendationCard from '../components/RecommendationCardV2'
 import TimelineChart from '../components/TimelineChart'
 import WarningSignalsCard from '../components/WarningSignalsCard'
+import HistoryList from '../components/HistoryList'
 import {
   formatClockTime,
   formatDuration,
@@ -66,6 +67,7 @@ function DoulaViewPage({ shareToken }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [realtimeStatus, setRealtimeStatus] = useState('Conectando...')
+  const [historyOpen, setHistoryOpen] = useState(false)
 
   useEffect(() => {
     let unsubscribe = null
@@ -214,10 +216,6 @@ function DoulaViewPage({ shareToken }) {
           urgency={warningAssessment.level !== 'calm' ? warningAssessment.level : phase.urgency}
           wellbeingSummary={wellbeingSummary}
           mode="doula"
-          meta={{
-            lastUpdated: session?.updated_at ? formatClockTime(session.updated_at) : '--',
-            sessionStatus: session?.status === 'closed' ? 'Sessão encerrada.' : 'Sessão ativa.',
-          }}
         />
         <WarningSignalsCard
           signals={warningSignals}
@@ -233,6 +231,14 @@ function DoulaViewPage({ shareToken }) {
           formatDuration={formatDuration}
           formatClockTime={formatClockTime}
           intervals={getIntervals(contractions)}
+        />
+        <HistoryList
+          contractions={contractions}
+          intervals={getIntervals(contractions)}
+          formatClockTime={formatClockTime}
+          formatDuration={formatDuration}
+          open={historyOpen}
+          onToggleOpen={() => setHistoryOpen((current) => !current)}
         />
       </main>
     </div>
