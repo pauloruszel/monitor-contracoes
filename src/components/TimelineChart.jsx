@@ -45,6 +45,8 @@ function TimelineChart({ contractions, averageInterval, formatDuration, formatCl
   })
 
   const markerY = averageInterval ? getY(averageInterval / 60) : null
+  const currentLabelY = markerY ? (markerY > 112 ? markerY - 8 : markerY - 4) : null
+  const currentLabelX = markerY && markerY > 112 ? 56 : 12
 
   return (
     <section className="card timeline-card">
@@ -116,7 +118,7 @@ function TimelineChart({ contractions, averageInterval, formatDuration, formatCl
         {markerY ? (
           <g>
             <line x1="8" x2="88" y1={markerY} y2={markerY} stroke="#183153" strokeWidth="1.5" />
-            <text x="12" y={markerY - 4} className="timeline-current-label">
+            <text x={currentLabelX} y={currentLabelY} className="timeline-current-label">
               Média atual
             </text>
           </g>
