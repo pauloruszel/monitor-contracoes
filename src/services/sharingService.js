@@ -131,6 +131,18 @@ export async function getSessionByShareToken(shareToken) {
   return data
 }
 
+export async function getSessionByWriterToken(sessionId, writerToken) {
+  const { data, error } = await supabase
+    .from('sessions')
+    .select('*')
+    .eq('id', sessionId)
+    .eq('writer_token', writerToken)
+    .single()
+
+  if (error) throw error
+  return data
+}
+
 export async function getContractionsBySession(sessionId) {
   const { data, error } = await supabase
     .from('contractions')

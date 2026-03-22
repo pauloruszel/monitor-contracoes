@@ -33,11 +33,28 @@ function ManualModal({ open, onClose }) {
           <section>
             <h3>Antes de começar</h3>
             <ul>
+              <li>Se quiser usar como app, instale na tela inicial do celular antes do uso real.</li>
               <li>Confirme se o número da doula está correto no campo de WhatsApp.</li>
               <li>Ative os alertas se quiser receber aviso por notificação, voz e som.</li>
               <li>Deixe o celular carregado e por perto.</li>
               <li>Combine um critério simples para marcar início e fim da contração.</li>
-              <li>Se estiver testando o app, use <strong>Resetar dados</strong> antes do uso real.</li>
+              <li>
+                Se a doula for acompanhar à distância, toque em <strong>Iniciar compartilhamento</strong>{' '}
+                antes de começar. A sessão só vai para o banco quando o compartilhamento estiver ativo.
+              </li>
+              <li>
+                Ao iniciar o compartilhamento, o app cria a sessão no banco e sincroniza os dados já
+                salvos neste aparelho.
+              </li>
+              <li>
+                Se o modo doula mostrar <strong>Ao vivo</strong>, as atualizações estão chegando quase
+                na hora. Se mostrar <strong>Atualização automática</strong>, o app continua tentando
+                atualizar em alguns segundos.
+              </li>
+              <li>
+                <strong>Resetar dados</strong> apaga os dados deste aparelho e, se houver sessão
+                compartilhada ativa, também remove os registros dessa sessão no banco.
+              </li>
             </ul>
           </section>
 

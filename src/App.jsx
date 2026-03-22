@@ -30,6 +30,7 @@ import { isSupabaseConfigured } from './lib/supabase'
 import {
   closeSharedSession,
   createSharedSession,
+  getSessionByWriterToken,
   resetSharedSessionData,
   syncContractions,
   syncWarningSignals,
@@ -139,6 +140,30 @@ function MonitorPage() {
     sharedSession,
     warningSignals,
   ])
+
+  useEffect(() => {
+    if (!sharedSession || !isSupabaseConfigured) return
+
+    let cancelled = false
+
+    async function validateSharedSession() {
+      try {
+        await getSessionByWriterToken(sharedSession.sessionId, sharedSession.writerToken)
+      } catch {
+        if (cancelled) return
+        setSharedSession(null)
+        setSyncStatus(
+          'A sessão compartilhada salva neste aparelho não existe mais no banco. Inicie um novo compartilhamento.',
+        )
+      }
+    }
+
+    validateSharedSession()
+
+    return () => {
+      cancelled = true
+    }
+  }, [sharedSession])
 
   const recentContractions = useMemo(
     () => getLastItems(contractions, ANALYSIS_WINDOW),
@@ -280,13 +305,26 @@ function MonitorPage() {
   const handleStartSharing = async () => {
     try {
       const createdSession = await createSharedSession({ doulaPhone })
-      setSharedSession({
+      const nextSharedSession = {
         ...createdSession,
         shareUrl: buildShareUrl(createdSession.shareToken),
+      }
+
+      try {
+        await syncWarningSignals(nextSharedSession, warningSignals)
+        await syncContractions(nextSharedSession, contractions)
+      } catch {
+        await resetSharedSessionData(nextSharedSession).catch(() => {})
+        throw new Error('initial_sync_failed')
+      }
+
+      setSharedSession({
+        ...nextSharedSession,
       })
-      setSyncStatus('Sessão criada. Sincronizando marcações...')
+      setSyncStatus('Sessão criada e sincronizada com a doula.')
     } catch {
-      setSyncStatus('Não foi possível iniciar o compartilhamento agora.')
+      setSharedSession(null)
+      setSyncStatus('Não foi possível iniciar o compartilhamento no banco agora.')
     }
   }
 
