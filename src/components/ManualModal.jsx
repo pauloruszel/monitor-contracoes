@@ -1,4 +1,4 @@
-import React from 'react'
+﻿import React from 'react'
 
 function ManualModal({ open, onClose }) {
   if (!open) return null
@@ -21,8 +21,7 @@ function ManualModal({ open, onClose }) {
             <p>
               O Monitor de Contrações ajuda a registrar contrações, observar o padrão ao longo do
               tempo e apoiar decisões práticas durante o trabalho de parto. Ele foi pensado para
-              uso simples pelo acompanhante, especialmente pelo pai, sem precisar fazer contas ou
-              anotações manuais.
+              uso simples pelo acompanhante, sem precisar fazer contas ou anotações manuais.
             </p>
             <p>
               O app <strong>não faz diagnóstico médico</strong> e <strong>não substitui</strong>{' '}
@@ -87,8 +86,7 @@ function ManualModal({ open, onClose }) {
                 <strong>Bem</strong>: ela está lidando bem com a contração.
               </li>
               <li>
-                <strong>Mais desconfortável</strong>: está mais difícil, exigindo mais atenção e
-                apoio.
+                <strong>Mais desconfortável</strong>: está mais difícil, exigindo mais atenção e apoio.
               </li>
               <li>
                 <strong>Muita dor</strong>: dor intensa ou sofrimento importante durante as
@@ -275,6 +273,12 @@ function ManualModal({ open, onClose }) {
               profissional.
             </p>
           </section>
+
+          <div className="manual-actions">
+            <button className="button button-close button-close-bottom" onClick={onClose}>
+              Fechar manual
+            </button>
+          </div>
         </div>
       </div>
     </div>

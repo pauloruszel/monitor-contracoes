@@ -736,6 +736,18 @@ a {
   margin: 0;
   padding-left: 20px;
 }
+.manual-actions {
+  position: sticky;
+  bottom: 0;
+  padding-top: 8px;
+  padding-bottom: 4px;
+  background: linear-gradient(180deg, rgba(255, 253, 249, 0), #fffdf9 28%);
+}
+
+.button-close-bottom {
+  width: 100%;
+}
+
 
 @media (min-width: 720px) {
   .card-primary,
@@ -796,3 +808,4 @@ a {
     padding: 6px 10px;
   }
 }
+
