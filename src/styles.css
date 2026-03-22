@@ -144,6 +144,7 @@ a {
   margin: 4px 0 0;
   color: #5f7081;
   font-weight: 700;
+  font-size: 0.82rem;
 }
 
 .badge {
@@ -337,6 +338,10 @@ a {
   font-size: 1.25rem;
 }
 
+.metrics-card .support-text {
+  margin-top: 16px;
+}
+
 .phase-calm {
   border-left: 6px solid #92a8d1;
 }
@@ -374,8 +379,51 @@ a {
 }
 
 .recommendation-main {
-  font-size: 1.1rem;
+  margin: 0;
+  font-size: 1.45rem;
   font-weight: 700;
+  color: #183153;
+}
+
+.now-phase-title {
+  margin: 4px 0 0;
+  font-size: 1.12rem;
+}
+
+.now-action-block {
+  padding: 14px 0 12px;
+  border-top: 1px solid rgba(36, 52, 71, 0.08);
+  border-bottom: 1px solid rgba(36, 52, 71, 0.08);
+}
+
+.now-action-label {
+  margin: 0 0 6px;
+  color: #5f7081;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.now-summary {
+  margin: 6px 0 0;
+  color: #425467;
+  font-size: 0.98rem;
+}
+
+.now-support-block {
+  padding-top: 12px;
+}
+
+.now-support-text {
+  margin-bottom: 0;
+}
+
+.now-meta-text {
+  margin-top: 8px;
+  margin-bottom: 0;
+  font-size: 0.9rem;
+  color: #5f7081;
 }
 
 .compact-text {
@@ -454,12 +502,20 @@ a {
 }
 
 .legend-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  max-width: 100%;
   padding: 4px 8px;
   border-radius: 999px;
   background: #eef2f7;
   color: #44576b;
   font-size: 0.7rem;
   font-weight: 700;
+  white-space: normal;
+  line-height: 1.15;
+  text-align: center;
 }
 
 .legend-chip-muted {

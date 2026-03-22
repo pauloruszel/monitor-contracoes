@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import CurrentContractionCard from './components/CurrentContractionCard'
 import MetricsCard from './components/MetricsCard'
-import RecommendationCard from './components/RecommendationCard'
+import RecommendationCard from './components/RecommendationCardV2'
 import TimelineChart from './components/TimelineChart'
 import HistoryList from './components/HistoryList'
 import DoulaContactCard from './components/DoulaContactCard'

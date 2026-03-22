@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import MetricsCard from '../components/MetricsCard'
-import RecommendationCard from '../components/RecommendationCard'
+import RecommendationCard from '../components/RecommendationCardV2'
 import TimelineChart from '../components/TimelineChart'
 import WarningSignalsCard from '../components/WarningSignalsCard'
 import {
@@ -213,6 +213,11 @@ function DoulaViewPage({ shareToken }) {
           recommendation={recommendation}
           urgency={warningAssessment.level !== 'calm' ? warningAssessment.level : phase.urgency}
           wellbeingSummary={wellbeingSummary}
+          mode="doula"
+          meta={{
+            lastUpdated: session?.updated_at ? formatClockTime(session.updated_at) : '--',
+            sessionStatus: session?.status === 'closed' ? 'Sessão encerrada.' : 'Sessão ativa.',
+          }}
         />
         <WarningSignalsCard
           signals={warningSignals}
