@@ -17,14 +17,11 @@ import {
 import { getPhaseFromMetrics, getRecommendationFromPhase } from '../utils/phaseRules'
 import { getWarningSignalAssessment } from '../utils/warningSignals'
 import {
-  getContractionsBySession,
   getSessionByShareToken,
-  getWarningSignalsBySession,
   subscribeToSession,
-} from '../services/sharingService'
+} from '../services/firebaseSharingService'
 
 const ANALYSIS_WINDOW = 5
-const POLL_INTERVAL_MS = 10000
 const STALE_AFTER_MS = 30000
 
 const defaultSignals = {
@@ -40,29 +37,29 @@ const defaultSignals = {
 function mapWarningSignalsRow(row) {
   if (!row) return defaultSignals
   return {
-    mucusPlug: row.mucus_plug,
-    watersBroken: row.waters_broken,
+    mucusPlug: row.mucusPlug,
+    watersBroken: row.watersBroken,
     meconium: row.meconium,
-    reducedMovement: row.reduced_movement,
+    reducedMovement: row.reducedMovement,
     bleeding: row.bleeding,
-    badSmellOrFever: row.bad_smell_or_fever,
+    badSmellOrFever: row.badSmellOrFever,
     preterm: row.preterm,
   }
 }
 
-function mapContractions(rows) {
+function mapContractions(rows = []) {
   return normalizeContractions(
     rows.map((row) => ({
       id: row.id,
-      start: row.start_at,
-      end: row.end_at,
-      durationSeconds: row.duration_seconds,
+      start: row.start,
+      end: row.end,
+      durationSeconds: row.durationSeconds,
       wellbeing: row.wellbeing,
     })),
   )
 }
 
-function getSyncStatusView({ isOnline, realtimeConnected, usingPolling, lastSuccessAt }) {
+function getSyncStatusView({ isOnline, realtimeConnected, lastSuccessAt }) {
   if (!isOnline) {
     return {
       tone: 'warning',
@@ -87,14 +84,6 @@ function getSyncStatusView({ isOnline, realtimeConnected, usingPolling, lastSucc
     }
   }
 
-  if (usingPolling) {
-    return {
-      tone: 'attention',
-      label: 'Atualização automática',
-      description: 'A tela segue conferindo as novidades automaticamente em alguns segundos.',
-    }
-  }
-
   return {
     tone: 'attention',
     label: 'Conectando',
@@ -110,7 +99,6 @@ function DoulaViewPage({ shareToken }) {
   const [error, setError] = useState('')
   const [historyOpen, setHistoryOpen] = useState(false)
   const [realtimeConnected, setRealtimeConnected] = useState(false)
-  const [usingPolling, setUsingPolling] = useState(false)
   const [isOnline, setIsOnline] = useState(() => navigator.onLine)
   const [lastSuccessAt, setLastSuccessAt] = useState(null)
   const [statusTick, setStatusTick] = useState(Date.now())
@@ -133,69 +121,30 @@ function DoulaViewPage({ shareToken }) {
 
   useEffect(() => {
     let unsubscribe = null
-    let pollTimer = null
 
-    async function refreshSession(foundSession, reason = 'manual') {
-      const [nextContractions, nextWarningSignals, nextSession] = await Promise.all([
-        getContractionsBySession(foundSession.id),
-        getWarningSignalsBySession(foundSession.id),
-        getSessionByShareToken(shareToken),
-      ])
-
-      setContractions(mapContractions(nextContractions))
-      setWarningSignals(mapWarningSignalsRow(nextWarningSignals))
+    function applySessionSnapshot(nextSession) {
       setSession(nextSession)
+      setContractions(mapContractions(Object.values(nextSession?.contractions || {})))
+      setWarningSignals(mapWarningSignalsRow(nextSession?.warningSignals))
       setLastSuccessAt(Date.now())
-      setIsOnline(true)
-
-      if (reason === 'poll') {
-        setUsingPolling(true)
-      } else {
-        setUsingPolling(false)
-      }
     }
 
     async function load() {
       try {
         setLoading(true)
         const foundSession = await getSessionByShareToken(shareToken)
-        const [contractionsRows, warningSignalsRow] = await Promise.all([
-          getContractionsBySession(foundSession.id),
-          getWarningSignalsBySession(foundSession.id),
-        ])
-
-        setSession(foundSession)
-        setContractions(mapContractions(contractionsRows))
-        setWarningSignals(mapWarningSignalsRow(warningSignalsRow))
+        applySessionSnapshot(foundSession)
         setLastSuccessAt(Date.now())
         setError('')
+        setRealtimeConnected(true)
 
-        unsubscribe = subscribeToSession(foundSession.id, async (event) => {
-          if (event.source === 'subscription_status') {
-            const connected = event.status === 'SUBSCRIBED'
-            setRealtimeConnected(connected)
-            if (!connected) {
-              setUsingPolling(true)
-            }
-            return
-          }
-
-          try {
-            setRealtimeConnected(true)
-            await refreshSession(foundSession, 'realtime')
-          } catch {
-            setUsingPolling(true)
-          }
+        unsubscribe = subscribeToSession(foundSession.id, (event) => {
+          setRealtimeConnected(true)
+          setIsOnline(true)
+          applySessionSnapshot(event.payload)
         })
-
-        pollTimer = window.setInterval(() => {
-          refreshSession(foundSession, 'poll').catch(() => {
-            setUsingPolling(true)
-            setRealtimeConnected(false)
-            setIsOnline(navigator.onLine)
-          })
-        }, POLL_INTERVAL_MS)
       } catch {
+        setRealtimeConnected(false)
         setError('Não foi possível carregar esta sessão compartilhada.')
       } finally {
         setLoading(false)
@@ -206,7 +155,6 @@ function DoulaViewPage({ shareToken }) {
 
     return () => {
       if (unsubscribe) unsubscribe()
-      if (pollTimer) window.clearInterval(pollTimer)
     }
   }, [shareToken])
 
@@ -248,11 +196,10 @@ function DoulaViewPage({ shareToken }) {
       getSyncStatusView({
         isOnline,
         realtimeConnected,
-        usingPolling,
         lastSuccessAt,
         statusTick,
       }),
-    [isOnline, realtimeConnected, usingPolling, lastSuccessAt, statusTick],
+    [isOnline, realtimeConnected, lastSuccessAt, statusTick],
   )
 
   if (loading) {
@@ -287,7 +234,7 @@ function DoulaViewPage({ shareToken }) {
           <h1>Acompanhamento da sessão</h1>
           <p className="hero-copy">Visualização somente leitura das marcações do acompanhante.</p>
           <p className="top-actions-help">
-            Última atualização: {session?.updated_at ? formatClockTime(session.updated_at) : '--'}.
+            Última atualização: {session?.updatedAt ? formatClockTime(session.updatedAt) : '--'}.
             {session?.status === 'closed' ? ' Sessão encerrada.' : ' Sessão ativa.'}
           </p>
           <div className={`sync-status sync-status-${syncStatus.tone}`}>

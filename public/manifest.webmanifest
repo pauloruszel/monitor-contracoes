@@ -1,7 +1,7 @@
 ﻿{
   "name": "Monitor de Contrações",
   "short_name": "Contrações",
-  "id": "/monitor-contracoes/?v=3",
+  "id": "/monitor-contracoes/",
   "description": "Acompanhe contrações, sinais de alerta e a evolução do trabalho de parto pelo celular.",
   "lang": "pt-BR",
   "start_url": "/monitor-contracoes/",
@@ -13,13 +13,13 @@
   "theme_color": "#183153",
   "icons": [
     {
-      "src": "/monitor-contracoes/icons/icon-192.png?v=3",
+      "src": "icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/monitor-contracoes/icons/icon-512.png?v=3",
+      "src": "icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -27,14 +27,14 @@
   ],
   "screenshots": [
     {
-      "src": "/monitor-contracoes/splash/splash-1179x2556.png?v=3",
+      "src": "splash/splash-1179x2556.png",
       "sizes": "1179x2556",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Abertura do Monitor de Contrações"
     },
     {
-      "src": "/monitor-contracoes/splash/splash-1536x2048.png?v=3",
+      "src": "splash/splash-1536x2048.png",
       "sizes": "1536x2048",
       "type": "image/png",
       "label": "Versão para telas maiores"

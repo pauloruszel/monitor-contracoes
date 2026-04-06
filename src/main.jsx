@@ -1,10 +1,15 @@
-﻿import React from 'react'
+import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import { registerServiceWorker } from './registerServiceWorker'
 import './styles.css'
 
 registerServiceWorker()
+
+window.document.documentElement.style.setProperty(
+  '--app-splash-image',
+  `url("${import.meta.env.BASE_URL}splash/splash-1179x2556.png")`,
+)
 
 window.document.documentElement.classList.add('app-ready')
 window.requestAnimationFrame(() => {
@@ -18,4 +23,3 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <App />
   </React.StrictMode>,
 )
-

@@ -28,7 +28,7 @@ body {
   padding: 24px;
   background:
     linear-gradient(rgba(247, 237, 229, 0.7), rgba(247, 237, 229, 0.86)),
-    url('/monitor-contracoes/splash/splash-1179x2556.png?v=3') center / cover no-repeat;
+    var(--app-splash-image, none) center / cover no-repeat;
   transition: opacity 220ms ease, visibility 220ms ease;
 }
 

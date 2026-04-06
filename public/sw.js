@@ -1,11 +1,11 @@
-﻿const CACHE_NAME = 'monitor-contracoes-v3'
+const CACHE_NAME = 'monitor-contracoes-v4'
 const BASE_PATH = '/monitor-contracoes/'
 const APP_SHELL = [
   BASE_PATH,
-  `${BASE_PATH}manifest.webmanifest?v=3`,
-  `${BASE_PATH}icons/icon-192.png?v=3`,
-  `${BASE_PATH}icons/icon-512.png?v=3`,
-  `${BASE_PATH}icons/apple-touch-icon.png?v=3`,
+  `${BASE_PATH}manifest.webmanifest`,
+  `${BASE_PATH}icons/icon-192.png`,
+  `${BASE_PATH}icons/icon-512.png`,
+  `${BASE_PATH}icons/apple-touch-icon.png`,
 ]
 
 self.addEventListener('install', (event) => {

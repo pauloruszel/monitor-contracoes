@@ -26,7 +26,7 @@ import {
 import { getPhaseFromMetrics, getRecommendationFromPhase } from './utils/phaseRules'
 import { clearStorage, loadFromStorage, saveToStorage } from './utils/storage'
 import { getWarningSignalAssessment } from './utils/warningSignals'
-import { isSupabaseConfigured } from './lib/supabase'
+import { isFirebaseConfigured } from './lib/firebase'
 import {
   closeSharedSession,
   createSharedSession,
@@ -34,7 +34,7 @@ import {
   resetSharedSessionData,
   syncContractions,
   syncWarningSignals,
-} from './services/sharingService'
+} from './services/firebaseSharingService'
 import {
   requestNotificationPermission,
   triggerBrowserNotification,
@@ -142,7 +142,7 @@ function MonitorPage() {
   ])
 
   useEffect(() => {
-    if (!sharedSession || !isSupabaseConfigured) return
+    if (!sharedSession || !isFirebaseConfigured) return
 
     let cancelled = false
 
@@ -273,7 +273,7 @@ function MonitorPage() {
 
     if (!confirmed) return
 
-    if (sharedSession && isSupabaseConfigured) {
+    if (sharedSession && isFirebaseConfigured) {
       try {
         await resetSharedSessionData(sharedSession)
       } catch {
@@ -350,7 +350,7 @@ function MonitorPage() {
   }
 
   useEffect(() => {
-    if (!sharedSession || !isSupabaseConfigured) return
+    if (!sharedSession || !isFirebaseConfigured) return
 
     async function runSync() {
       try {
@@ -369,7 +369,7 @@ function MonitorPage() {
   }, [sharedSession, contractions])
 
   useEffect(() => {
-    if (!sharedSession || !isSupabaseConfigured) return
+    if (!sharedSession || !isFirebaseConfigured) return
 
     async function runSync() {
       try {
@@ -495,7 +495,7 @@ function MonitorPage() {
           onToggleOpen={() => setWarningSignalsOpen((current) => !current)}
         />
         <SharingCard
-          configured={isSupabaseConfigured}
+          configured={isFirebaseConfigured}
           sharedSession={sharedSession}
           syncStatus={syncStatus}
           onStartSharing={handleStartSharing}

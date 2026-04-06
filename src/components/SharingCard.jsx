@@ -24,7 +24,7 @@ function SharingCard({
 
       {!configured ? (
         <p className="support-text">
-          Configure `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` para habilitar o compartilhamento.
+          O Firebase não está disponível no app no momento. Revise a configuração do Realtime Database.
         </p>
       ) : sharedSession ? (
         <>
