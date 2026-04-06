@@ -1,7 +1,7 @@
 # Plano técnico de implementação por fases
 
 ## Objetivo
-Implementar de forma incremental as melhorias clínicas e de produto do app, minimizando risco de regressão e aproveitando a arquitetura atual (`App.jsx`, `contractionUtils.js`, `phaseRules.js`, `TimelineChart.jsx`, storage local e Supabase).
+Implementar de forma incremental as melhorias clínicas e de produto do app, minimizando risco de regressão e aproveitando a arquitetura atual (`App.jsx`, `contractionUtils.js`, `phaseRules.js`, `TimelineChart.jsx`, storage local e Firebase Realtime Database).
 
 ---
 

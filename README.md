@@ -14,7 +14,7 @@ O projeto foi desenvolvido para:
 - Sugerir recomendações práticas
 - Exibir uma timeline visual
 
-Além do uso local, o app possui integração com **Supabase** para permitir sessões compartilhadas e leitura remota pela doula.
+Além do uso local, o app possui integração com **Firebase Realtime Database** para permitir sessões compartilhadas e leitura remota pela doula.
 
 > ⚠️ **Importante:** Este app é apenas um apoio de monitoramento e **não substitui orientação médica**.
 
@@ -73,7 +73,7 @@ Além do uso local, o app possui integração com **Supabase** para permitir ses
 ### 🤝 Compartilhamento com Doula
 
 - Botão de contato via WhatsApp
-- Sessão compartilhada em tempo real com Supabase
+- Sessão compartilhada em tempo real com Firebase Realtime Database
 - Tela remota de leitura para a doula
 
 ---
@@ -84,7 +84,7 @@ Além do uso local, o app possui integração com **Supabase** para permitir ses
 - **Build Tool:** Vite
 - **Estilo:** CSS simples
 - **Visualização:** SVG puro para timeline
-- **Backend / Realtime:** Supabase
+- **Backend / Realtime:** Firebase Realtime Database
 - **Testes:** Vitest
 
 ---
@@ -109,7 +109,7 @@ src/
 
 - Node.js 20+
 - npm
-- Projeto Supabase configurado
+- Projeto Firebase com Realtime Database configurado
 
 ---
 
@@ -121,14 +121,9 @@ src/
 npm install
 ```
 
-### 2. Configurar variáveis de ambiente
+### 2. Configuração do Firebase
 
-Crie o arquivo `.env.local` na raiz:
-
-```env
-VITE_SUPABASE_URL=https://seu-projeto.supabase.co
-VITE_SUPABASE_ANON_KEY=sb_publishable_xxxxxxxxx
-```
+Revise os dados de configuração em `src/lib/firebase.js` e confirme que o projeto Firebase e o Realtime Database corretos estão sendo usados.
 
 ### 3. Iniciar o projeto
 
@@ -160,26 +155,33 @@ npm run test:coverage
 
 ---
 
-## ☁️ Supabase
+## ☁️ Firebase Realtime Database
 
-O MVP de compartilhamento utiliza três tabelas principais:
+O MVP de compartilhamento utiliza uma estrutura hierárquica simples no Realtime Database:
 
-- `sessions`
-- `contractions`
-- `warning_signals`
+- `sessions/{sessionId}`
+- `sessions/{sessionId}/contractions/{contractionId}`
+- `sessions/{sessionId}/warningSignals`
 
 ### Fluxo de Funcionamento
 
 1. O acompanhante inicia uma sessão compartilhada
-2. O app cria tokens e registra a sessão no Supabase
+2. O app cria tokens e registra a sessão no Firebase Realtime Database
 3. Contrações e sinais de alerta são sincronizados
 4. A doula acessa via link com hash route
 5. A interface da doula atualiza em tempo quase real
 
-### Variáveis Necessárias
+### Estrutura principal
 
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
+- `id`
+- `shareToken`
+- `writerToken`
+- `status`
+- `doulaPhone`
+- `createdAt`
+- `updatedAt`
+- `contractions`
+- `warningSignals`
 
 ---
 
@@ -197,16 +199,9 @@ npm run build
 
 O GitHub Actions publica automaticamente a branch `main`.
 
-### Configuração de Variáveis em Produção
+### Configuração em Produção
 
-No repositório, acesse:
-
-`Settings` → `Secrets and variables` → `Actions` → `Variables`
-
-Crie:
-
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
+Garanta que o app publicado esteja apontando para o projeto Firebase correto e que o Realtime Database esteja habilitado com regras compatíveis com o estágio atual do produto.
 
 ---
 
@@ -226,7 +221,7 @@ Foco total em uso real no celular:
 ## ⚠️ Observações Importantes
 
 - Funciona localmente com persistência no navegador
-- O compartilhamento depende da configuração do Supabase
+- O compartilhamento depende da configuração do Firebase Realtime Database
 - O link da doula é somente leitura
 - O app não realiza diagnóstico clínico
 - Sinais de alerta devem ter prioridade sobre dados temporais
@@ -238,7 +233,7 @@ Foco total em uso real no celular:
 - Exportação e importação de backup
 - Transformar em PWA instalável
 - Melhorias na robustez do realtime
-- Implementação de políticas RLS para segurança
+- Regras de acesso por token no Realtime Database
 - UX otimizada para uso noturno
 
 ---
