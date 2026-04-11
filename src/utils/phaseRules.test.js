@@ -1,22 +1,47 @@
 import { describe, expect, it } from 'vitest'
-import { getPhaseFromMetrics, getRecommendationFromPhase } from './phaseRules'
+import {
+  buildRecommendation,
+  evaluateAlertRules,
+  evaluatePhaseRules,
+  evaluateProfileAdjustments,
+  getIrregularity,
+  getPhaseFromMetrics,
+  getRecommendationFromPhase,
+} from './phaseRules'
 
 function makeContractions(count) {
   return Array.from({ length: count }, (_, index) => ({ id: `${index}` }))
 }
 
 describe('phaseRules', () => {
+  it('getIrregularity detecta quando a variacao dos intervalos e alta', () => {
+    expect(getIrregularity([300, 320])).toBe(false)
+    expect(getIrregularity([120, 360, 480])).toBe(true)
+  })
+
+  it('evaluateAlertRules ainda nao faz override nesta fase', () => {
+    expect(evaluateAlertRules({})).toBeNull()
+  })
+
+  it('evaluateProfileAdjustments mantem o resultado base nesta fase', () => {
+    const phaseResult = { key: 'latente' }
+    expect(evaluateProfileAdjustments({ phaseResult })).toEqual(phaseResult)
+  })
+
   it('retorna poucos dados quando ainda nao ha base suficiente', () => {
-    const result = getPhaseFromMetrics({
+    const input = {
       contractions: makeContractions(1),
       intervals: [],
       averageDuration: 0,
       averageInterval: 0,
-    })
+    }
+    const result = getPhaseFromMetrics(input)
+    const modularResult = evaluatePhaseRules(input)
 
     expect(result.key).toBe('prodomos')
     expect(result.patternLabel).toBe('Poucos dados')
     expect(result.alertKey).toBe('')
+    expect(modularResult).toEqual(result)
   })
 
   it('considera padrao regular quando ha menos de tres intervalos', () => {
@@ -166,5 +191,76 @@ describe('phaseRules', () => {
       title: 'Continuar em casa',
       alertMessage: '',
     })
+  })
+
+  it('buildRecommendation reutiliza o mesmo fallback das fachadas publicas', () => {
+    expect(buildRecommendation({ phaseKey: 'latente' })).toMatchObject({
+      title: 'Avisar a doula',
+    })
+    expect(buildRecommendation({ phaseKey: 'desconhecida' })).toMatchObject({
+      title: 'Continuar em casa',
+    })
+  })
+
+  it('evaluateProfileAdjustments enriquece a explicacao com tendencia e contexto', () => {
+    const result = evaluateProfileAdjustments({
+      phaseResult: {
+        key: 'prodomos',
+        patternLabel: 'Padrão espaçado',
+        description: 'Ainda parece início / pródromos.',
+      },
+      trendSummary: {
+        intervalTrend: { label: 'shortening' },
+        durationTrend: { label: 'increasing' },
+        regularity: { label: 'regular' },
+      },
+      userProfile: {
+        priorFastLabor: true,
+      },
+      clinicalPreferences: {
+        alertSensitivity: 'high',
+      },
+    })
+
+    expect(result.patternLabel).toBe('Padrão encurtando')
+    expect(result.description).toContain('A janela recente sugere intervalos encurtando.')
+    expect(result.description).toContain('A duração média também está aumentando.')
+    expect(result.description).toContain('Como já houve parto rápido')
+    expect(result.description).toContain('sensibilidade de alerta')
+  })
+
+  it('buildRecommendation usa preferencia de aviso cedo e adiciona contexto', () => {
+    const result = buildRecommendation({
+      phaseKey: 'prodomos',
+      trendSummary: {
+        intervalTrend: { label: 'shortening' },
+      },
+      userProfile: {
+        priorFastLabor: true,
+      },
+      clinicalPreferences: {
+        notifyDoulaEarly: true,
+      },
+    })
+
+    expect(result.title).toBe('Avisar a doula cedo')
+    expect(result.message).toContain('avisar a doula mais cedo')
+    expect(result.secondary).toContain('O padrão recente está encurtando.')
+    expect(result.secondary).toContain('parto rápido anterior')
+    expect(result.alertMessage).toBe('Padrão inicial encurtando. Avisar a doula cedo.')
+  })
+
+  it('getRecommendationFromPhase aceita contexto opcional', () => {
+    const result = getRecommendationFromPhase('latente', {
+      trendSummary: {
+        intervalTrend: { label: 'spacing' },
+      },
+      clinicalPreferences: {
+        useFiveOneOne: true,
+      },
+    })
+
+    expect(result.secondary).toContain('mais espaçado')
+    expect(result.secondary).toContain('5-1-1')
   })
 })

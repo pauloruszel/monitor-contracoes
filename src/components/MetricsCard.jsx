@@ -28,6 +28,9 @@ function MetricsCard({ metrics, formatDuration }) {
           value={metrics.lastInterval ? formatDuration(metrics.lastInterval) : '--'}
         />
       </div>
+      {metrics.trendSummary ? (
+        <p className="support-text metrics-trend">Tendência: {metrics.trendSummary.summaryLabel}</p>
+      ) : null}
       <p className="support-text">A análise principal usa uma janela móvel das últimas 5 contrações.</p>
     </section>
   )

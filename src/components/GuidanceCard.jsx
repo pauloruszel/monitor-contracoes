@@ -2,7 +2,7 @@ import React from 'react'
 
 function GuidanceCard() {
   return (
-    <section className="card">
+    <section className="card guidance-card-wide">
       <div className="card-header">
         <h2>Orientações</h2>
         <span className="badge badge-muted">Apoio prático</span>

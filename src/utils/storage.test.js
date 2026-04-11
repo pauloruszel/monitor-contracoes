@@ -1,5 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { clearStorage, loadFromStorage, saveToStorage } from './storage'
+import {
+  clearStorage,
+  defaultClinicalPreferences,
+  defaultUserProfile,
+  defaultWarningSignals,
+  loadFromStorage,
+  saveToStorage,
+} from './storage'
 
 describe('storage', () => {
   beforeEach(() => {
@@ -20,21 +27,28 @@ describe('storage', () => {
       alertsEnabled: false,
       lastAlertKey: '',
       sharedSession: null,
-      warningSignals: {
-        mucusPlug: false,
-        watersBroken: false,
-        meconium: false,
-        reducedMovement: false,
-        bleeding: false,
-        badSmellOrFever: false,
-        preterm: false,
-      },
+      warningSignals: defaultWarningSignals,
+      sessionNotes: '',
+      userProfile: defaultUserProfile,
+      clinicalPreferences: defaultClinicalPreferences,
     })
   })
 
   it('loadFromStorage retorna dado valido salvo', () => {
     localStorage.setItem('monitor-contracoes:v1', '{"ok":true}')
-    expect(loadFromStorage()).toEqual({ ok: true })
+    expect(loadFromStorage()).toEqual({
+      contractions: [],
+      activeContraction: null,
+      doulaPhone: '5521981688856',
+      alertsEnabled: false,
+      lastAlertKey: '',
+      sharedSession: null,
+      warningSignals: defaultWarningSignals,
+      sessionNotes: '',
+      userProfile: defaultUserProfile,
+      clinicalPreferences: defaultClinicalPreferences,
+      ok: true,
+    })
   })
 
   it('loadFromStorage volta ao default em caso de json invalido', () => {
@@ -46,15 +60,27 @@ describe('storage', () => {
       alertsEnabled: false,
       lastAlertKey: '',
       sharedSession: null,
-      warningSignals: {
-        mucusPlug: false,
-        watersBroken: false,
-        meconium: false,
-        reducedMovement: false,
-        bleeding: false,
-        badSmellOrFever: false,
-        preterm: false,
-      },
+      warningSignals: defaultWarningSignals,
+      sessionNotes: '',
+      userProfile: defaultUserProfile,
+      clinicalPreferences: defaultClinicalPreferences,
+    })
+  })
+
+  it('loadFromStorage mescla defaults novos com dados salvos antigos', () => {
+    localStorage.setItem('monitor-contracoes:v1', '{"doulaPhone":"5511999999999"}')
+
+    expect(loadFromStorage()).toEqual({
+      contractions: [],
+      activeContraction: null,
+      doulaPhone: '5511999999999',
+      alertsEnabled: false,
+      lastAlertKey: '',
+      sharedSession: null,
+      warningSignals: defaultWarningSignals,
+      sessionNotes: '',
+      userProfile: defaultUserProfile,
+      clinicalPreferences: defaultClinicalPreferences,
     })
   })
 
