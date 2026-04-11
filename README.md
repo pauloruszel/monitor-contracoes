@@ -123,7 +123,18 @@ npm install
 
 ### 2. Configuração do Firebase
 
-Revise os dados de configuração em `src/lib/firebase.js` e confirme que o projeto Firebase e o Realtime Database corretos estão sendo usados.
+Crie o arquivo `.env.local` na raiz do projeto com as variáveis abaixo:
+
+```env
+VITE_FIREBASE_API_KEY=your_firebase_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+VITE_FIREBASE_DATABASE_URL=https://your-project-default-rtdb.firebaseio.com
+VITE_FIREBASE_PROJECT_ID=your-project-id
+VITE_FIREBASE_MESSAGING_SENDER_ID=123456789012
+VITE_FIREBASE_APP_ID=1:123456789012:web:your_app_id
+```
+
+Esses valores são consumidos por `src/lib/firebase.js`.
 
 ### 3. Iniciar o projeto
 
@@ -201,7 +212,23 @@ O GitHub Actions publica automaticamente a branch `main`.
 
 ### Configuração em Produção
 
-Garanta que o app publicado esteja apontando para o projeto Firebase correto e que o Realtime Database esteja habilitado com regras compatíveis com o estágio atual do produto.
+No GitHub, configure as variáveis usadas no build em:
+
+`Settings` → `Secrets and variables` → `Actions` → `Variables`
+
+Variáveis esperadas:
+
+- `VITE_FIREBASE_API_KEY`
+- `VITE_FIREBASE_AUTH_DOMAIN`
+- `VITE_FIREBASE_DATABASE_URL`
+- `VITE_FIREBASE_PROJECT_ID`
+- `VITE_FIREBASE_MESSAGING_SENDER_ID`
+- `VITE_FIREBASE_APP_ID`
+
+Além disso:
+
+- mantenha o Realtime Database habilitado no projeto Firebase correto
+- confirme que as regras do banco estão compatíveis com o estágio atual do produto
 
 ---
 
