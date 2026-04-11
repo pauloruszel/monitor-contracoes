@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import DecisionCard from '../components/DecisionCard'
 import CollapsibleSection from '../components/CollapsibleSection'
 import MetricsCard from '../components/MetricsCard'
@@ -100,6 +100,7 @@ function DoulaViewPage({ shareToken }) {
   const [error, setError] = useState('')
   const [historyOpen, setHistoryOpen] = useState(false)
   const [timelineOpen, setTimelineOpen] = useState(false)
+  const [now, setNow] = useState(Date.now())
   const [realtimeConnected, setRealtimeConnected] = useState(false)
   const [isOnline, setIsOnline] = useState(() => navigator.onLine)
   const [lastSuccessAt, setLastSuccessAt] = useState(null)
@@ -118,6 +119,11 @@ function DoulaViewPage({ shareToken }) {
 
   useEffect(() => {
     const timer = window.setInterval(() => setStatusTick(Date.now()), 5000)
+    return () => window.clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 30000)
     return () => window.clearInterval(timer)
   }, [])
 
@@ -165,12 +171,12 @@ function DoulaViewPage({ shareToken }) {
     [contractions],
   )
   const contractions1h = useMemo(
-    () => getContractionsInLastMinutes(contractions, 60),
-    [contractions],
+    () => getContractionsInLastMinutes(contractions, 60, now),
+    [contractions, now],
   )
   const contractions2h = useMemo(
-    () => getContractionsInLastMinutes(contractions, 120),
-    [contractions],
+    () => getContractionsInLastMinutes(contractions, 120, now),
+    [contractions, now],
   )
   const intervals = useMemo(() => getIntervals(recentContractions), [recentContractions])
   const averageDuration = useMemo(() => getAverageDuration(recentContractions), [recentContractions])
@@ -259,7 +265,7 @@ function DoulaViewPage({ shareToken }) {
     averageDuration,
     averageInterval,
     lastDuration: contractions.length ? contractions[contractions.length - 1].durationSeconds : null,
-    lastInterval: getIntervals(contractions).length ? getIntervals(contractions).at(-1) : null,
+    lastInterval: intervals.length > 0 ? intervals[intervals.length - 1] : null,
     trendSummary,
   }
   const screenUrgency =

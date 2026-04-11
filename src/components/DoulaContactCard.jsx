@@ -1,10 +1,15 @@
 import React from 'react'
 
-function DoulaContactCard({ doulaPhone, onChangePhone, whatsAppUrl }) {
+function DoulaContactCard({ doulaPhone, onChangePhone, whatsAppUrl, canSendSummary, sendSummaryHint }) {
   return (
     <section className="card">
       <div className="card-header">
-        <h2>WhatsApp da doula Raquel</h2>
+        <div>
+          <h2>Contato rápido da doula</h2>
+          <p className="support-text compact-text">
+            Abre o WhatsApp com um resumo curto da sessão atual e, se houver, inclui o link ao vivo.
+          </p>
+        </div>
         <span className="badge badge-muted">Contato rápido</span>
       </div>
       <label className="field">
@@ -16,16 +21,18 @@ function DoulaContactCard({ doulaPhone, onChangePhone, whatsAppUrl }) {
           onChange={(event) => onChangePhone(event.target.value)}
         />
       </label>
+      <p className="support-text compact-text">{sendSummaryHint}</p>
       <a
         className={`button button-whatsapp ${whatsAppUrl ? '' : 'button-disabled'}`}
         href={whatsAppUrl || '#'}
         target="_blank"
         rel="noreferrer"
+        aria-disabled={!canSendSummary}
         onClick={(event) => {
           if (!whatsAppUrl) event.preventDefault()
         }}
       >
-        Avisar doula no WhatsApp
+        Enviar resumo no WhatsApp
       </a>
     </section>
   )

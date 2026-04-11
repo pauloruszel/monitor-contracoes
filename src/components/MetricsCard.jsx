@@ -17,8 +17,8 @@ function MetricsCard({ metrics, formatDuration }) {
         <span className="badge badge-muted">{metrics.totalContractions} registradas</span>
       </div>
       <div className="metrics-grid">
-        <Metric label="Duração média" value={formatDuration(metrics.averageDuration)} />
-        <Metric label="Intervalo médio" value={formatDuration(metrics.averageInterval)} />
+        <Metric label="Duração média recente" value={formatDuration(metrics.averageDuration)} />
+        <Metric label="Intervalo médio recente" value={formatDuration(metrics.averageInterval)} />
         <Metric
           label="Última duração"
           value={metrics.lastDuration ? formatDuration(metrics.lastDuration) : '--'}
@@ -31,7 +31,10 @@ function MetricsCard({ metrics, formatDuration }) {
       {metrics.trendSummary ? (
         <p className="support-text metrics-trend">Tendência: {metrics.trendSummary.summaryLabel}</p>
       ) : null}
-      <p className="support-text">A análise principal usa uma janela móvel das últimas 5 contrações.</p>
+      <p className="support-text">
+        A leitura principal usa uma janela móvel das últimas 5 contrações. O total registrado considera
+        todo o histórico da sessão.
+      </p>
     </section>
   )
 }
