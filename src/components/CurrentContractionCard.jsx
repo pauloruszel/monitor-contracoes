@@ -1,4 +1,4 @@
-﻿import React from 'react'
+import React from 'react'
 
 function CurrentContractionCard({
   activeContraction,
@@ -35,25 +35,6 @@ function CurrentContractionCard({
           type="button"
         >
           {isActive ? 'Encerrar contração' : 'Iniciar contração'}
-        </button>
-      </div>
-
-      <div className="action-secondary-row">
-        <button
-          className="button button-secondary action-secondary-button"
-          onClick={onStart}
-          disabled={isActive}
-          type="button"
-        >
-          Iniciar
-        </button>
-        <button
-          className="button button-secondary action-secondary-button"
-          onClick={onEnd}
-          disabled={!isActive}
-          type="button"
-        >
-          Encerrar
         </button>
       </div>
 

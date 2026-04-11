@@ -123,7 +123,9 @@ export function getPatternRegularity(intervals) {
     return {
       label: 'insufficient_data',
       spreadSeconds: 0,
-      averageInterval: intervals?.length ? Math.round(intervals.reduce((sum, value) => sum + value, 0) / intervals.length) : 0,
+      averageInterval: intervals?.length
+        ? Math.round(intervals.reduce((sum, value) => sum + value, 0) / intervals.length)
+        : 0,
     }
   }
 

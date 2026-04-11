@@ -1,4 +1,4 @@
-﻿export const PHASES = {
+export const PHASES = {
   prodomos: {
     key: 'prodomos',
     label: 'Pródromos / início',

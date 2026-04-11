@@ -1,4 +1,4 @@
-﻿export function registerServiceWorker() {
+export function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return
   if (!import.meta.env.PROD) return
 

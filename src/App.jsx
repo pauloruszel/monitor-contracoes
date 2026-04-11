@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import DecisionCard from './components/DecisionCard'
 import CollapsibleSection from './components/CollapsibleSection'
 import CurrentContractionCard from './components/CurrentContractionCard'
@@ -67,6 +67,41 @@ function getShareTokenFromHash() {
 
 function buildShareUrl(shareToken) {
   return `${window.location.origin}${window.location.pathname}#/acompanhar/${shareToken}`
+}
+
+const warningSignalLabels = {
+  mucusPlug: 'Perda do tampão',
+  watersBroken: 'Bolsa rompeu',
+  meconium: 'Líquido verde ou marrom',
+  reducedMovement: 'Menos movimentos do bebê',
+  bleeding: 'Sangramento',
+  badSmellOrFever: 'Cheiro ruim ou febre',
+  preterm: 'Menos de 37 semanas',
+}
+
+function formatWhatsAppTimestamp(value) {
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(value)
+}
+
+function getWhatsAppActionLabel(actionTitle) {
+  const labels = {
+    'Continuar em casa': 'Continuar em casa',
+    'Avisar a doula': 'Avisar a doula',
+    'Avisar a doula cedo': 'Avisar a doula cedo',
+    'Preparar ida': 'Preparar ida ao hospital',
+    'Ir ao hospital': 'Ir ao hospital agora',
+    'Ir ao hospital / procurar atendimento': 'Ir ao hospital / procurar atendimento',
+    'Entrar em contato com a maternidade': 'Entrar em contato com a maternidade',
+    'Avisar a equipe': 'Avisar a equipe',
+    Observar: 'Observar com atenção',
+  }
+
+  return labels[actionTitle] || actionTitle
 }
 
 function MonitorPage() {
@@ -548,25 +583,74 @@ function MonitorPage() {
 
     return recommendation
   }, [recommendation, wellbeingSummary, phase.key, warningAssessment])
-
-  const whatsAppMessage = encodeURIComponent(
-    [
-      'Estamos monitorando as contrações.',
-      `Contrações recentes: ${recentContractions.length}.`,
-      `Duração média: ${formatDuration(averageDuration)}.`,
-      `Intervalo médio: ${formatDuration(averageInterval)}.`,
-      `Fase provável: ${phase.label}.`,
-      `Recomendação: ${recommendation.title}. ${recommendation.message}`,
-    ].join(' '),
-  )
   const phoneDigits = doulaPhone.replace(/\D/g, '')
-  const whatsAppUrl = phoneDigits ? `https://wa.me/${phoneDigits}?text=${whatsAppMessage}` : ''
+  const hasValidDoulaPhone = phoneDigits.length >= 12
   const screenUrgency =
     warningAssessment.level === 'critical'
       ? 'critical'
       : warningAssessment.level === 'warning'
         ? 'warning'
         : phase.urgency
+  const activeWarningLabels = useMemo(
+    () =>
+      Object.entries(warningSignals)
+        .filter(([, enabled]) => enabled)
+        .map(([key]) => warningSignalLabels[key] || key),
+    [warningSignals],
+  )
+  const hasShareLink = Boolean(sharedSession?.shareUrl)
+  const canSendWhatsAppSummary = hasValidDoulaPhone && recentContractions.length > 0
+  const whatsAppMessage = useMemo(() => {
+    if (!canSendWhatsAppSummary) return ''
+
+    const lines = [
+      'Monitor de Contrações',
+      '',
+      `Atualização: ${formatWhatsAppTimestamp(Date.now())}`,
+      `Conduta: ${getWhatsAppActionLabel(recommendationView.title)}`,
+      `Fase provável: ${phase.label}`,
+      '',
+      `Intervalo médio: ${formatDuration(averageInterval)}`,
+      `Duração média: ${formatDuration(averageDuration)}`,
+      `Tendência: ${trendSummary?.summaryLabel || 'ainda sem padrão claro'}`,
+      `Contrações recentes: ${recentContractions.length}`,
+      '',
+      `Bem-estar: ${wellbeingSummary.label}`,
+      `Alertas: ${
+        activeWarningLabels.length > 0 ? activeWarningLabels.join(', ') : 'nenhum marcado'
+      }`,
+    ]
+
+    if (hasShareLink) {
+      lines.push('', 'Acompanhar ao vivo:', sharedSession.shareUrl)
+    }
+
+    return encodeURIComponent(lines.join('\n'))
+  }, [
+    activeWarningLabels,
+    averageDuration,
+    averageInterval,
+    canSendWhatsAppSummary,
+    formatDuration,
+    hasShareLink,
+    phase.label,
+    recentContractions.length,
+    recommendationView.title,
+    sharedSession?.shareUrl,
+    trendSummary,
+    wellbeingSummary.label,
+  ])
+  const whatsAppUrl =
+    hasValidDoulaPhone && whatsAppMessage ? `https://wa.me/${phoneDigits}?text=${whatsAppMessage}` : ''
+  const whatsAppHint = !phoneDigits
+    ? 'Informe o número com DDI para habilitar o envio.'
+    : !hasValidDoulaPhone
+      ? 'Revise o número com DDI. Ele precisa estar completo para habilitar o envio.'
+    : !canSendWhatsAppSummary
+      ? 'Registre ao menos 1 contração para enviar um resumo útil.'
+      : hasShareLink
+        ? 'O resumo incluirá a leitura atual e o link da sessão ao vivo.'
+        : 'O resumo incluirá a leitura atual da sessão.'
 
   return (
     <div className={`app-shell app-shell-${screenUrgency}`}>
@@ -692,6 +776,8 @@ function MonitorPage() {
             doulaPhone={doulaPhone}
             onChangePhone={setDoulaPhone}
             whatsAppUrl={whatsAppUrl}
+            canSendSummary={canSendWhatsAppSummary}
+            sendSummaryHint={whatsAppHint}
           />
         </CollapsibleSection>
         <CollapsibleSection

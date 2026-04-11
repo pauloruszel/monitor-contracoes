@@ -1,4 +1,4 @@
-﻿import React from 'react'
+import React from 'react'
 
 function buildPrimaryReason({ warningAssessment, trendSummary, phase }) {
   if (warningAssessment.level === 'critical') {
@@ -46,18 +46,6 @@ function buildActionCopy({ urgency, recommendation }) {
   return recommendation.title
 }
 
-function buildSupportCopy({ urgency, recommendation }) {
-  if (urgency === 'critical') {
-    return 'Ignore o contexto secundário e aja primeiro.'
-  }
-
-  if (urgency === 'warning') {
-    return 'Confirme o alerta e reavalie o contexto logo depois.'
-  }
-
-  return recommendation.secondary || ''
-}
-
 function getUrgencyLabel(urgency) {
   if (urgency === 'critical') return 'Ação imediata'
   if (urgency === 'warning') return 'Atenção alta'
@@ -81,7 +69,6 @@ function DecisionCard({
   })
   const metricLine = buildMetricLine({ metrics, formatDuration })
   const actionCopy = buildActionCopy({ urgency, recommendation })
-  const supportCopy = buildSupportCopy({ urgency, recommendation })
   const isCritical = urgency === 'critical'
   const cardClassName = [
     'card',
@@ -118,7 +105,6 @@ function DecisionCard({
         <p className="decision-action">{actionCopy}</p>
         <p className="decision-why">{primaryReason}</p>
         {metricLine ? <p className="decision-metrics">{metricLine}</p> : null}
-        {supportCopy ? <p className="support-text decision-support">{supportCopy}</p> : null}
       </div>
     </section>
   )

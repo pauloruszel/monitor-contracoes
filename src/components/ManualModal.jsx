@@ -1,4 +1,4 @@
-﻿import React from 'react'
+import React from 'react'
 
 function ManualModal({ open, onClose }) {
   if (!open) return null
