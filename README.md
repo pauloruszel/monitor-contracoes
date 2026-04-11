@@ -1,95 +1,92 @@
 ﻿# Monitor de Contrações
 
-Aplicativo web para acompanhamento de contrações durante o trabalho de parto, com foco em uso prático pelo acompanhante e possibilidade de compartilhamento em tempo real com a doula.
+Aplicativo web para acompanhar contrações durante o trabalho de parto, com foco no uso prático pelo acompanhante e opção de compartilhamento em tempo real com a doula.
 
----
+## Visão Geral
 
-## 📌 Visão Geral
+O projeto foi desenhado para uso simples no celular, com prioridade para:
 
-O projeto foi desenvolvido para:
+- registrar contrações com poucos toques
+- interpretar o padrão recente sem contas manuais
+- destacar a próxima ação sugerida
+- registrar sinais de alerta relevantes
+- compartilhar a sessão com a doula quando necessário
 
-- Registrar contrações
-- Calcular padrões automaticamente
-- Indicar a fase provável do trabalho de parto
-- Sugerir recomendações práticas
-- Exibir uma timeline visual
+O app continua sendo **offline-first** no modo normal. O Firebase é usado apenas no modo compartilhado.
 
-Além do uso local, o app possui integração com **Firebase Realtime Database** para permitir sessões compartilhadas e leitura remota pela doula.
+> Importante: este app é um apoio de monitoramento e não substitui orientação médica, obstétrica ou da doula.
 
-> ⚠️ **Importante:** Este app é apenas um apoio de monitoramento e **não substitui orientação médica**.
+## O Que O App Faz Hoje
 
----
+### Monitoramento principal
 
-## 🚀 Principais Funcionalidades
-
-### ⏱️ Monitoramento de Contrações
-
-- Registro de início e fim
+- Início e fim de cada contração
 - Cronômetro em tempo real
-- Cálculo automático de:
-  - Duração de cada contração
-  - Intervalo entre contrações
-  - Duração média
-  - Intervalo médio
+- Cálculo automático de duração e intervalo
+- Duração média e intervalo médio
+- Histórico local persistido no navegador
 
-### 📊 Classificação da Fase
+### Leitura do momento
 
-- Pródromos / início
-- Fase latente
-- Fase ativa
-- Transição
+- Fase provável do trabalho de parto
+- Conduta sugerida no topo da tela
+- Motivo curto para a recomendação
+- Tendência recente com base em janelas temporais
 
-### 💡 Recomendações
+### Contexto clínico local
 
-- Sugestões práticas baseadas no momento atual
+- Observações da sessão
+- Perfil da gestação
+- Preferências clínicas locais
+- Bem-estar durante a contração
 
-### 😊 Módulo de Conforto
-
-- Bem
-- Mais desconfortável
-- Muita dor
-
-### ⚠️ Sinais de Alerta
+### Sinais de alerta
 
 - Perda do tampão
 - Bolsa rompeu
-- Líquido com mecônio
+- Líquido verde ou marrom
 - Menos movimentos do bebê
 - Sangramento
 - Cheiro ruim ou febre
 - Menos de 37 semanas
 
-### 🔔 Alertas Automáticos
+### Compartilhamento com a doula
 
-- Notificações no navegador
+- Sessão remota temporária no Firebase Realtime Database
+- Link de leitura para a doula
+- Tela remota com atualização em tempo quase real
+- Encerramento e remoção da sessão compartilhada
+
+### Alertas
+
+- Notificação do navegador
 - Voz sintetizada
 - Som curto
+- Destaque visual na interface
 
-### 📈 Visualização e Histórico
+## Arquitetura Atual da Interface
 
-- Timeline visual das contrações
-- Histórico persistido localmente
+A tela principal foi reorganizada para reduzir carga cognitiva em uso real:
 
-### 🤝 Compartilhamento com Doula
+- **Nível 1: decisão**
+  Topo decisório com fase provável, conduta sugerida, motivo curto e linha numérica de conferência.
+- **Nível 2: ação**
+  Bloco de contração com cronômetro e botão principal para iniciar ou encerrar.
+- **Nível 3: contexto**
+  Sinais de alerta, métricas resumidas e blocos colapsáveis para timeline, histórico, contexto da sessão e compartilhamento.
 
-- Botão de contato via WhatsApp
-- Sessão compartilhada em tempo real com Firebase Realtime Database
-- Tela remota de leitura para a doula
+O modo doula segue a mesma lógica visual, mas com foco em leitura remota em vez de operação.
 
----
+## Stack
 
-## 🧱 Stack Tecnológica
+- React
+- Vite
+- CSS
+- SVG puro para timeline
+- Firebase Realtime Database
+- Vitest
 
-- **Frontend:** React + JavaScript
-- **Build Tool:** Vite
-- **Estilo:** CSS simples
-- **Visualização:** SVG puro para timeline
-- **Backend / Realtime:** Firebase Realtime Database
-- **Testes:** Vitest
-
----
-
-## 📁 Estrutura do Projeto
+## Estrutura do Projeto
 
 ```text
 src/
@@ -103,17 +100,13 @@ src/
   styles.css
 ```
 
----
-
-## ⚙️ Requisitos
+## Requisitos
 
 - Node.js 20+
 - npm
-- Projeto Firebase com Realtime Database configurado
+- Projeto Firebase com Realtime Database habilitado
 
----
-
-## ▶️ Rodando Localmente
+## Rodando Localmente
 
 ### 1. Instalar dependências
 
@@ -121,9 +114,9 @@ src/
 npm install
 ```
 
-### 2. Configuração do Firebase
+### 2. Criar `.env.local`
 
-Crie o arquivo `.env.local` na raiz do projeto com as variáveis abaixo:
+Use as mesmas chaves documentadas em `.env.example`:
 
 ```env
 VITE_FIREBASE_API_KEY=your_firebase_api_key
@@ -136,7 +129,7 @@ VITE_FIREBASE_APP_ID=1:123456789012:web:your_app_id
 
 Esses valores são consumidos por `src/lib/firebase.js`.
 
-### 3. Iniciar o projeto
+### 3. Rodar o projeto
 
 ```bash
 npm run dev
@@ -148,75 +141,9 @@ npm run dev
 http://localhost:5173/monitor-contracoes/
 ```
 
----
+## Variáveis de Ambiente
 
-## 🧪 Testes
-
-### Executar testes
-
-```bash
-npm test
-```
-
-### Executar com cobertura
-
-```bash
-npm run test:coverage
-```
-
----
-
-## ☁️ Firebase Realtime Database
-
-O MVP de compartilhamento utiliza uma estrutura hierárquica simples no Realtime Database:
-
-- `sessions/{sessionId}`
-- `sessions/{sessionId}/contractions/{contractionId}`
-- `sessions/{sessionId}/warningSignals`
-
-### Fluxo de Funcionamento
-
-1. O acompanhante inicia uma sessão compartilhada
-2. O app cria tokens e registra a sessão no Firebase Realtime Database
-3. Contrações e sinais de alerta são sincronizados
-4. A doula acessa via link com hash route
-5. A interface da doula atualiza em tempo quase real
-
-### Estrutura principal
-
-- `id`
-- `shareToken`
-- `writerToken`
-- `status`
-- `doulaPhone`
-- `createdAt`
-- `updatedAt`
-- `contractions`
-- `warningSignals`
-
----
-
-## 🚀 Deploy
-
-O projeto está preparado para deploy estático via GitHub Pages.
-
-### Build
-
-```bash
-npm run build
-```
-
-### Publicação
-
-O GitHub Actions publica automaticamente a branch `main`.
-
-### Configuração em Produção
-
-No GitHub, configure as variáveis usadas no build em:
-
-`Settings` → `Secrets and variables` → `Actions` → `Variables`
-
-Variáveis esperadas:
+Variáveis esperadas no projeto:
 
 - `VITE_FIREBASE_API_KEY`
 - `VITE_FIREBASE_AUTH_DOMAIN`
@@ -225,46 +152,99 @@ Variáveis esperadas:
 - `VITE_FIREBASE_MESSAGING_SENDER_ID`
 - `VITE_FIREBASE_APP_ID`
 
-Além disso:
+## Firebase Realtime Database
 
-- mantenha o Realtime Database habilitado no projeto Firebase correto
-- confirme que as regras do banco estão compatíveis com o estágio atual do produto
+O Firebase é usado apenas no modo compartilhado. Sem compartilhamento ativo, os dados ficam locais no navegador.
 
----
+### Fluxo do compartilhamento
 
-## 📱 UX do Produto
+1. A usuária inicia o compartilhamento.
+2. O app cria uma sessão temporária no Realtime Database.
+3. Contrações, sinais de alerta e contexto da sessão são sincronizados.
+4. A doula acessa a sessão por link com hash route.
+5. A sessão pode ser encerrada ou removida.
 
-Foco total em uso real no celular:
+### Estrutura principal no banco
 
-- Ações principais sempre visíveis
-- Leitura rápida do estado atual
-- Cards com hierarquia de informação
-- Histórico recolhível
-- Sinais de alerta recolhíveis
-- Modo doula com leitura simplificada
+```text
+sessions/
+  {sessionId}/
+    id
+    shareToken
+    writerToken
+    status
+    doulaPhone
+    createdAt
+    updatedAt
+    contractions/
+      {contractionId}/
+    warningSignals/
+    sessionNotes
+    userProfile
+    clinicalPreferences
+```
 
----
+### Regras atuais
 
-## ⚠️ Observações Importantes
+- Sem autenticação Firebase no MVP
+- Sessão criada só quando o compartilhamento é ativado
+- `shareToken` para leitura pela doula
+- `writerToken` para escrita da usuária
+- Estrutura simples, sem joins nem backend adicional
 
-- Funciona localmente com persistência no navegador
-- O compartilhamento depende da configuração do Firebase Realtime Database
-- O link da doula é somente leitura
-- O app não realiza diagnóstico clínico
-- Sinais de alerta devem ter prioridade sobre dados temporais
+## Testes
 
----
+### Rodar testes
 
-## 🛣️ Roadmap Sugerido
+```bash
+npm test
+```
 
-- Exportação e importação de backup
-- Transformar em PWA instalável
-- Melhorias na robustez do realtime
-- Regras de acesso por token no Realtime Database
-- UX otimizada para uso noturno
+### Rodar build
 
----
+```bash
+npm run build
+```
 
-## 📄 Licença
+## Deploy
 
-Uso privado do projeto, conforme necessidade do repositório.
+O projeto está preparado para deploy estático via GitHub Pages.
+
+### Workflow
+
+O deploy automático ocorre a partir da branch `main` via `.github/workflows/deploy.yml`.
+
+### Repository Variables esperadas no GitHub
+
+Configure em:
+
+`Settings` -> `Secrets and variables` -> `Actions` -> `Variables`
+
+Variáveis necessárias:
+
+- `VITE_FIREBASE_API_KEY`
+- `VITE_FIREBASE_AUTH_DOMAIN`
+- `VITE_FIREBASE_DATABASE_URL`
+- `VITE_FIREBASE_PROJECT_ID`
+- `VITE_FIREBASE_MESSAGING_SENDER_ID`
+- `VITE_FIREBASE_APP_ID`
+
+## Observações Importantes
+
+- O modo normal do app continua local e persistido no navegador.
+- O Firebase não substitui o modo offline; ele só complementa o compartilhamento.
+- O link da doula é somente leitura.
+- Alertas clínicos têm prioridade sobre o ritmo temporal.
+- O app não confirma estágio clínico do parto.
+
+## Roadmap Imediato
+
+- Refinar polimento visual após a nova hierarquia P5
+- Expandir regras clínicas sobre tendência e contexto
+- Evoluir proteção por token no Realtime Database
+- Melhorar cobertura de testes de interface e fluxo
+- Preparar exportação de sessão e relatório
+
+## Licença
+
+Uso privado do projeto, conforme a necessidade do repositório.
