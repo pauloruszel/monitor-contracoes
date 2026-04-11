@@ -1,25 +1,26 @@
 ﻿import React, { useEffect, useMemo, useState } from 'react'
+import DecisionCard from '../components/DecisionCard'
+import CollapsibleSection from '../components/CollapsibleSection'
 import MetricsCard from '../components/MetricsCard'
-import RecommendationCard from '../components/RecommendationCardV2'
 import TimelineChart from '../components/TimelineChart'
 import WarningSignalsCard from '../components/WarningSignalsCard'
 import HistoryList from '../components/HistoryList'
 import {
+  buildTrendSummary,
   formatClockTime,
   formatDuration,
   getAverageDuration,
+  getAverageDurationFromList,
   getAverageInterval,
+  getAverageIntervalFromList,
+  getContractionsInLastMinutes,
   getIntervals,
   getLastItems,
-  getWellbeingSummary,
   normalizeContractions,
 } from '../utils/contractionUtils'
 import { getPhaseFromMetrics, getRecommendationFromPhase } from '../utils/phaseRules'
 import { getWarningSignalAssessment } from '../utils/warningSignals'
-import {
-  getSessionByShareToken,
-  subscribeToSession,
-} from '../services/firebaseSharingService'
+import { getSessionByShareToken, subscribeToSession } from '../services/firebaseSharingService'
 
 const ANALYSIS_WINDOW = 5
 const STALE_AFTER_MS = 30000
@@ -98,6 +99,7 @@ function DoulaViewPage({ shareToken }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [historyOpen, setHistoryOpen] = useState(false)
+  const [timelineOpen, setTimelineOpen] = useState(false)
   const [realtimeConnected, setRealtimeConnected] = useState(false)
   const [isOnline, setIsOnline] = useState(() => navigator.onLine)
   const [lastSuccessAt, setLastSuccessAt] = useState(null)
@@ -162,9 +164,43 @@ function DoulaViewPage({ shareToken }) {
     () => getLastItems(contractions, ANALYSIS_WINDOW),
     [contractions],
   )
+  const contractions1h = useMemo(
+    () => getContractionsInLastMinutes(contractions, 60),
+    [contractions],
+  )
+  const contractions2h = useMemo(
+    () => getContractionsInLastMinutes(contractions, 120),
+    [contractions],
+  )
   const intervals = useMemo(() => getIntervals(recentContractions), [recentContractions])
   const averageDuration = useMemo(() => getAverageDuration(recentContractions), [recentContractions])
   const averageInterval = useMemo(() => getAverageInterval(recentContractions), [recentContractions])
+  const metrics1h = useMemo(
+    () => ({
+      contractions: contractions1h,
+      intervals: getIntervals(contractions1h),
+      averageDuration: getAverageDurationFromList(contractions1h),
+      averageInterval: getAverageIntervalFromList(contractions1h),
+    }),
+    [contractions1h],
+  )
+  const metrics2h = useMemo(
+    () => ({
+      contractions: contractions2h,
+      intervals: getIntervals(contractions2h),
+      averageDuration: getAverageDurationFromList(contractions2h),
+      averageInterval: getAverageIntervalFromList(contractions2h),
+    }),
+    [contractions2h],
+  )
+  const trendSummary = useMemo(
+    () =>
+      buildTrendSummary({
+        metrics1h,
+        metrics2h,
+      }),
+    [metrics1h, metrics2h],
+  )
   const phase = useMemo(
     () =>
       getPhaseFromMetrics({
@@ -172,10 +208,10 @@ function DoulaViewPage({ shareToken }) {
         intervals,
         averageDuration,
         averageInterval,
+        trendSummary,
       }),
-    [recentContractions, intervals, averageDuration, averageInterval],
+    [recentContractions, intervals, averageDuration, averageInterval, trendSummary],
   )
-  const wellbeingSummary = useMemo(() => getWellbeingSummary(recentContractions), [recentContractions])
   const warningAssessment = useMemo(
     () => getWarningSignalAssessment(warningSignals),
     [warningSignals],
@@ -185,11 +221,11 @@ function DoulaViewPage({ shareToken }) {
       return {
         title: warningAssessment.title,
         message: warningAssessment.message,
-        secondary: 'Este alerta tem prioridade sobre o tempo das contrações.',
+        secondary: 'O alerta vem antes da leitura do ritmo.',
       }
     }
-    return getRecommendationFromPhase(phase.key)
-  }, [phase.key, warningAssessment])
+    return getRecommendationFromPhase(phase.key, { trendSummary })
+  }, [phase.key, warningAssessment, trendSummary])
 
   const syncStatus = useMemo(
     () =>
@@ -224,10 +260,17 @@ function DoulaViewPage({ shareToken }) {
     averageInterval,
     lastDuration: contractions.length ? contractions[contractions.length - 1].durationSeconds : null,
     lastInterval: getIntervals(contractions).length ? getIntervals(contractions).at(-1) : null,
+    trendSummary,
   }
+  const screenUrgency =
+    warningAssessment.level === 'critical'
+      ? 'critical'
+      : warningAssessment.level === 'warning'
+        ? 'warning'
+        : phase.urgency
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell app-shell-${screenUrgency}`}>
       <header className="hero">
         <div>
           <p className="eyebrow">Modo doula</p>
@@ -242,23 +285,17 @@ function DoulaViewPage({ shareToken }) {
             <span>{syncStatus.description}</span>
           </div>
         </div>
-        <div
-          className={`status-pill status-${
-            warningAssessment.level !== 'calm' ? warningAssessment.level : phase.urgency
-          }`}
-        >
-          {warningAssessment.level !== 'calm' ? warningAssessment.title : phase.label}
-        </div>
       </header>
 
       <main className="content-grid">
-        <MetricsCard metrics={metrics} formatDuration={formatDuration} />
-        <RecommendationCard
+        <DecisionCard
           phase={phase}
           recommendation={recommendation}
-          urgency={warningAssessment.level !== 'calm' ? warningAssessment.level : phase.urgency}
-          wellbeingSummary={wellbeingSummary}
-          mode="doula"
+          warningAssessment={warningAssessment}
+          urgency={screenUrgency}
+          trendSummary={trendSummary}
+          metrics={metrics}
+          formatDuration={formatDuration}
         />
         <WarningSignalsCard
           signals={warningSignals}
@@ -268,13 +305,23 @@ function DoulaViewPage({ shareToken }) {
           onToggleOpen={() => {}}
           readOnly
         />
-        <TimelineChart
-          contractions={contractions}
-          averageInterval={averageInterval}
-          formatDuration={formatDuration}
-          formatClockTime={formatClockTime}
-          intervals={getIntervals(contractions)}
-        />
+        <MetricsCard metrics={metrics} formatDuration={formatDuration} />
+        <CollapsibleSection
+          title="Leitura temporal"
+          description="Visualização detalhada da evolução recente para leitura remota."
+          badge="Contexto"
+          open={timelineOpen}
+          onToggle={() => setTimelineOpen((current) => !current)}
+          countLabel="timeline"
+        >
+          <TimelineChart
+            contractions={contractions}
+            averageInterval={averageInterval}
+            formatDuration={formatDuration}
+            formatClockTime={formatClockTime}
+            intervals={getIntervals(contractions)}
+          />
+        </CollapsibleSection>
         <HistoryList
           contractions={contractions}
           intervals={getIntervals(contractions)}
@@ -289,4 +336,3 @@ function DoulaViewPage({ shareToken }) {
 }
 
 export default DoulaViewPage
-

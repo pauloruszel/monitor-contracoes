@@ -5,6 +5,7 @@ function RecommendationCardV2({
   recommendation,
   urgency,
   wellbeingSummary,
+  trendSummary = null,
   mode = 'monitor',
   meta = null,
 }) {
@@ -29,6 +30,7 @@ function RecommendationCardV2({
         <p className={`wellbeing-note wellbeing-${wellbeingSummary.dominant}`}>
           {viewModel.wellbeingLabel}: {wellbeingSummary.label}
         </p>
+        {trendSummary ? <p className="support-text now-trend-text">{trendSummary.summaryLabel}</p> : null}
         <p className="support-text now-support-text">{viewModel.support}</p>
         {viewModel.metaText ? <p className="support-text now-meta-text">{viewModel.metaText}</p> : null}
       </div>
@@ -38,12 +40,12 @@ function RecommendationCardV2({
 
 function getNowCardViewModel(phaseKey, recommendation, mode, meta) {
   const base = {
-    phaseLabel: mode === 'doula' ? 'Leitura atual' : 'Fase provÃ¡vel',
+    phaseLabel: mode === 'doula' ? 'Leitura atual' : 'Fase provável',
     actionLabel: mode === 'doula' ? 'Conduta sugerida' : 'O que fazer agora',
-    wellbeingLabel: mode === 'doula' ? 'Como ela estÃ¡' : 'Como ela estÃ¡ agora',
+    wellbeingLabel: mode === 'doula' ? 'Como ela está' : 'Como ela está agora',
     metaText:
       mode === 'doula' && meta
-        ? `Ãšltima atualizaÃ§Ã£o: ${meta.lastUpdated}. ${meta.sessionStatus}`
+        ? `Última atualização: ${meta.lastUpdated}. ${meta.sessionStatus}`
         : '',
   }
 
@@ -52,28 +54,28 @@ function getNowCardViewModel(phaseKey, recommendation, mode, meta) {
       return {
         ...base,
         action: recommendation.title,
-        summary: 'As contraÃ§Ãµes estÃ£o mais frequentes e vale acompanhar de perto.',
-        support: 'Ela pode continuar se hidratando e descansando entre as contraÃ§Ãµes.',
+        summary: 'As contrações estão mais frequentes e vale acompanhar de perto.',
+        support: 'Ela pode continuar se hidratando e descansando entre as contrações.',
       }
     case 'ativa':
       return {
         ...base,
         action: recommendation.title,
-        summary: 'As contraÃ§Ãµes parecem mais fortes e mais prÃ³ximas.',
-        support: 'Separem documentos, bolsa e deixem a saÃ­da pronta com calma.',
+        summary: 'As contrações parecem mais fortes e mais próximas.',
+        support: 'Separem documentos, bolsa e deixem a saída pronta com calma.',
       }
     case 'transicao':
       return {
         ...base,
         action: recommendation.title,
-        summary: 'Os intervalos estÃ£o muito curtos e a situaÃ§Ã£o exige mais urgÃªncia.',
-        support: 'Procurem atendimento agora. O app nÃ£o substitui avaliaÃ§Ã£o profissional.',
+        summary: 'Os intervalos estão muito curtos e a situação exige mais urgência.',
+        support: 'Procurem atendimento agora. O app não substitui avaliação profissional.',
       }
     default:
       return {
         ...base,
         action: recommendation.title,
-        summary: 'Ainda parece comeÃ§o. Sigam com calma e continuem observando.',
+        summary: 'Ainda parece começo. Sigam com calma e continuem observando.',
         support: 'Ela pode se hidratar, se alimentar e descansar.',
       }
   }

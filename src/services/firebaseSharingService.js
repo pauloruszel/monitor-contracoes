@@ -1,5 +1,6 @@
 import { db } from '../lib/firebase'
 import { get, off, onValue, push, ref, remove, set, update } from 'firebase/database'
+import { defaultClinicalPreferences, defaultUserProfile } from '../utils/storage'
 
 const defaultWarningSignals = {
   mucusPlug: false,
@@ -42,6 +43,9 @@ export async function createSharedSession({ doulaPhone }) {
     updatedAt: now,
     contractions: {},
     warningSignals: defaultWarningSignals,
+    sessionNotes: '',
+    userProfile: defaultUserProfile,
+    clinicalPreferences: defaultClinicalPreferences,
   }
 
   await set(ref(db, `sessions/${sessionId}`), session)
@@ -85,6 +89,21 @@ export async function syncWarningSignals(sharedSession, warningSignals) {
   })
 
   await update(ref(db, `sessions/${sharedSession.sessionId}`), {
+    updatedAt: Date.now(),
+  })
+}
+
+export async function syncSessionContext(sharedSession, sessionContext) {
+  await update(ref(db, `sessions/${sharedSession.sessionId}`), {
+    sessionNotes: sessionContext.sessionNotes || '',
+    userProfile: {
+      ...defaultUserProfile,
+      ...(sessionContext.userProfile || {}),
+    },
+    clinicalPreferences: {
+      ...defaultClinicalPreferences,
+      ...(sessionContext.clinicalPreferences || {}),
+    },
     updatedAt: Date.now(),
   })
 }
