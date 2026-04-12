@@ -1,21 +1,21 @@
 export const SESSION_CONTEXT_COPY = {
   activeItems: {
-    homeObservationGuidance: 'Orientação para observar em casa',
-    longTravelToHospital: 'Deslocamento longo até o hospital',
-    bagReady: 'Bolsa e documentos já separados',
+    homeObservationGuidance: 'Orientacao para observar em casa',
+    longTravelToHospital: 'Deslocamento longo ate o hospital',
+    bagReady: 'Bolsa e documentos ja separados',
   },
   clinicalItems: {
-    priorFastLabor: 'Parto anterior rápido',
-    firstPregnancy: 'Primeira gestação',
+    priorFastLabor: 'Parto anterior rapido',
+    firstPregnancy: 'Primeira gestacao',
     notifyDoulaEarly: 'Aviso precoce para a doula',
-    useFiveOneOne: 'Referência 5-1-1 habilitada',
+    useFiveOneOne: 'Referencia 5-1-1 habilitada',
     alertSensitivityHigh: 'Sensibilidade alta de alerta',
     alertSensitivityLow: 'Sensibilidade baixa de alerta',
   },
   adjustmentReasons: {
-    priorFastLabor: 'histórico de parto rápido',
+    priorFastLabor: 'historico de parto rapido',
     alertSensitivityHigh: 'sensibilidade alta de alerta',
-    notifyDoulaEarly: 'preferência de aviso precoce para a doula',
-    longTravelToHospital: 'deslocamento longo até o hospital',
+    notifyDoulaEarly: 'preferencia de aviso precoce para a doula',
+    longTravelToHospital: 'deslocamento longo ate o hospital',
   },
 }

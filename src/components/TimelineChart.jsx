@@ -9,13 +9,13 @@ const markers = [
 ]
 
 const zoneStops = [
-  { label: 'Pródromos', min: 10, max: 16, color: '#92a8d1' },
-  { label: 'Latente', min: 5, max: 10, color: '#f2c66d' },
-  { label: 'Ativa', min: 3, max: 5, color: '#f28c52' },
-  { label: 'Transição', min: 0, max: 3, color: '#d9534f' },
+  { label: 'Mais espacado', min: 10, max: 16, color: '#92a8d1' },
+  { label: 'Faixa intermediaria', min: 5, max: 10, color: '#f2c66d' },
+  { label: 'Mais proximo', min: 3, max: 5, color: '#f28c52' },
+  { label: 'Muito frequente', min: 0, max: 3, color: '#d9534f' },
 ]
 
-const visualOnlyPhases = ['Expulsivo', 'Placenta']
+const visualOnlyZones = ['Leitura visual', 'Nao diagnostico']
 
 const WIDTH = 100
 const HEIGHT = 176
@@ -51,8 +51,8 @@ function TimelineChart({ contractions, averageInterval, formatDuration, formatCl
   return (
     <section className="card timeline-card">
       <div className="card-header">
-        <h2>Timeline das contrações</h2>
-        <span className="badge badge-muted">Tempo entre inícios</span>
+        <h2>Timeline das contracoes</h2>
+        <span className="badge badge-muted">Tempo entre inicios</span>
       </div>
       <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="timeline-svg" role="img">
         <rect x="8" y="10" width="81" height="142" rx="12" fill="#fff7eb" />
@@ -107,7 +107,7 @@ function TimelineChart({ contractions, averageInterval, formatDuration, formatCl
           <g key={point.contraction.id}>
             <circle cx={point.x} cy={point.y} r="3" fill="#f28c52">
               <title>
-                {`Contração ${index + 1} - ${formatClockTime(point.contraction.start)} | duração ${formatDuration(
+                {`Contracao ${index + 1} - ${formatClockTime(point.contraction.start)} | duracao ${formatDuration(
                   point.contraction.durationSeconds,
                 )} | intervalo ${point.intervalSeconds ? formatDuration(point.intervalSeconds) : '--'}`}
               </title>
@@ -119,17 +119,17 @@ function TimelineChart({ contractions, averageInterval, formatDuration, formatCl
           <g>
             <line x1="8" x2="88" y1={markerY} y2={markerY} stroke="#183153" strokeWidth="1.5" />
             <text x={currentLabelX} y={currentLabelY} className="timeline-current-label">
-              Média atual
+              Media atual
             </text>
           </g>
         ) : null}
       </svg>
       <div className="timeline-legend">
-        <span className="legend-chip">Pródromos</span>
-        <span className="legend-chip">Latente</span>
-        <span className="legend-chip">Ativa</span>
-        <span className="legend-chip">Transição</span>
-        {visualOnlyPhases.map((label) => (
+        <span className="legend-chip">Mais espacado</span>
+        <span className="legend-chip">Faixa intermediaria</span>
+        <span className="legend-chip">Mais proximo</span>
+        <span className="legend-chip">Muito frequente</span>
+        {visualOnlyZones.map((label) => (
           <span className="legend-chip legend-chip-muted" key={label}>
             {label}
           </span>
