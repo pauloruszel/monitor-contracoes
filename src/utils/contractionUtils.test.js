@@ -132,6 +132,40 @@ describe('contractionUtils', () => {
     ])
   })
 
+  it('getContractionsInLastMinutes retorna vazio para janela invalida e aceita now numerico', () => {
+    const now = new Date('2026-03-21T10:30:00.000Z').getTime()
+    const contractions = [
+      {
+        id: '1',
+        start: new Date('2026-03-21T10:10:00.000Z'),
+        end: new Date('2026-03-21T10:10:55.000Z'),
+        durationSeconds: 55,
+      },
+    ]
+
+    expect(getContractionsInLastMinutes(contractions, 0, now)).toEqual([])
+    expect(getContractionsInLastMinutes(contractions, -5, now)).toEqual([])
+    expect(getContractionsInLastMinutes(contractions, 60, now).map((item) => item.id)).toEqual([
+      '1',
+    ])
+  })
+
+  it('getContractionsInLastMinutes aceita start serializado sem normalizacao previa', () => {
+    const now = new Date('2026-03-21T10:30:00.000Z')
+    const contractions = [
+      {
+        id: 'string-start',
+        start: '2026-03-21T10:10:00.000Z',
+        end: '2026-03-21T10:10:55.000Z',
+        durationSeconds: 55,
+      },
+    ]
+
+    expect(getContractionsInLastMinutes(contractions, 60, now).map((item) => item.id)).toEqual([
+      'string-start',
+    ])
+  })
+
   it('getAverageDurationFromList e getAverageIntervalFromList reaproveitam os calculos medios', () => {
     const contractions = [
       { start: new Date('2026-03-21T10:00:00.000Z'), durationSeconds: 40 },
@@ -303,6 +337,16 @@ describe('contractionUtils', () => {
 
     expect(
       getWellbeingSummary([
+        {},
+        { wellbeing: 'green' },
+      ], 2),
+    ).toEqual({
+      dominant: 'green',
+      label: 'Últimas 2: lidando bem entre as contrações.',
+    })
+
+    expect(
+      getWellbeingSummary([
         { wellbeing: 'green' },
         { wellbeing: 'green' },
       ]),
@@ -346,5 +390,291 @@ describe('contractionUtils', () => {
     expect(formatClockTime(null)).toBe('--')
     expect(formatClockTime(new Date('2026-03-21T10:07:00.000Z'))).toMatch(/10:07|07:07|13:07/)
     expect(formatClockTime('2026-03-21T10:08:00.000Z')).toMatch(/10:08|07:08|13:08/)
+  })
+
+  it('getContractionsInLastMinutes inclui a borda inicial da janela e exclui o que fica antes dela', () => {
+    const now = new Date('2026-03-21T15:00:00.000Z')
+    const contractions = normalizeContractions([
+      {
+        id: 'outside',
+        start: '2026-03-21T13:59:59.000Z',
+        end: '2026-03-21T14:00:40.000Z',
+        durationSeconds: 41,
+      },
+      {
+        id: 'edge',
+        start: '2026-03-21T14:00:00.000Z',
+        end: '2026-03-21T14:00:45.000Z',
+        durationSeconds: 45,
+      },
+      {
+        id: 'inside',
+        start: '2026-03-21T14:30:00.000Z',
+        end: '2026-03-21T14:30:40.000Z',
+        durationSeconds: 40,
+      },
+    ])
+
+    expect(getContractionsInLastMinutes(contractions, 60, now).map((item) => item.id)).toEqual([
+      'edge',
+      'inside',
+    ])
+  })
+
+  it('representa corretamente a diferenca entre a janela movel de 1h e a de 2h', () => {
+    const now = new Date('2026-03-21T14:40:00.000Z')
+    const contractions = normalizeContractions([
+      {
+        id: 'a',
+        start: '2026-03-21T13:10:00.000Z',
+        end: '2026-03-21T13:10:45.000Z',
+        durationSeconds: 45,
+      },
+      {
+        id: 'b',
+        start: '2026-03-21T13:20:00.000Z',
+        end: '2026-03-21T13:20:45.000Z',
+        durationSeconds: 45,
+      },
+      {
+        id: 'c',
+        start: '2026-03-21T13:30:00.000Z',
+        end: '2026-03-21T13:30:45.000Z',
+        durationSeconds: 45,
+      },
+      {
+        id: 'd',
+        start: '2026-03-21T14:20:00.000Z',
+        end: '2026-03-21T14:20:45.000Z',
+        durationSeconds: 45,
+      },
+      {
+        id: 'e',
+        start: '2026-03-21T14:25:00.000Z',
+        end: '2026-03-21T14:25:45.000Z',
+        durationSeconds: 45,
+      },
+      {
+        id: 'f',
+        start: '2026-03-21T14:30:00.000Z',
+        end: '2026-03-21T14:30:45.000Z',
+        durationSeconds: 45,
+      },
+      {
+        id: 'g',
+        start: '2026-03-21T14:35:00.000Z',
+        end: '2026-03-21T14:35:45.000Z',
+        durationSeconds: 45,
+      },
+    ])
+
+    const window1h = getContractionsInLastMinutes(contractions, 60, now)
+    const window2h = getContractionsInLastMinutes(contractions, 120, now)
+
+    expect(window1h.map((item) => item.id)).toEqual(['d', 'e', 'f', 'g'])
+    expect(window2h.map((item) => item.id)).toEqual(['a', 'b', 'c', 'd', 'e', 'f', 'g'])
+    expect(window2h.length).toBeGreaterThan(window1h.length)
+  })
+
+  it('buildTrendSummary compara janela movel de 1h contra janela movel de 2h, e nao blocos isolados', () => {
+    const metrics1h = {
+      contractions: normalizeContractions([
+        {
+          id: 'd',
+          start: '2026-03-21T14:20:00.000Z',
+          end: '2026-03-21T14:20:45.000Z',
+          durationSeconds: 45,
+        },
+        {
+          id: 'e',
+          start: '2026-03-21T14:25:00.000Z',
+          end: '2026-03-21T14:25:45.000Z',
+          durationSeconds: 45,
+        },
+        {
+          id: 'f',
+          start: '2026-03-21T14:30:00.000Z',
+          end: '2026-03-21T14:30:45.000Z',
+          durationSeconds: 45,
+        },
+        {
+          id: 'g',
+          start: '2026-03-21T14:35:00.000Z',
+          end: '2026-03-21T14:35:45.000Z',
+          durationSeconds: 45,
+        },
+      ]),
+      intervals: [300, 300, 300],
+      averageDuration: 45,
+      averageInterval: 300,
+    }
+
+    const metrics2h = {
+      contractions: normalizeContractions([
+        {
+          id: 'a',
+          start: '2026-03-21T13:10:00.000Z',
+          end: '2026-03-21T13:10:45.000Z',
+          durationSeconds: 45,
+        },
+        {
+          id: 'b',
+          start: '2026-03-21T13:20:00.000Z',
+          end: '2026-03-21T13:20:45.000Z',
+          durationSeconds: 45,
+        },
+        {
+          id: 'c',
+          start: '2026-03-21T13:30:00.000Z',
+          end: '2026-03-21T13:30:45.000Z',
+          durationSeconds: 45,
+        },
+        {
+          id: 'd',
+          start: '2026-03-21T14:20:00.000Z',
+          end: '2026-03-21T14:20:45.000Z',
+          durationSeconds: 45,
+        },
+        {
+          id: 'e',
+          start: '2026-03-21T14:25:00.000Z',
+          end: '2026-03-21T14:25:45.000Z',
+          durationSeconds: 45,
+        },
+        {
+          id: 'f',
+          start: '2026-03-21T14:30:00.000Z',
+          end: '2026-03-21T14:30:45.000Z',
+          durationSeconds: 45,
+        },
+        {
+          id: 'g',
+          start: '2026-03-21T14:35:00.000Z',
+          end: '2026-03-21T14:35:45.000Z',
+          durationSeconds: 45,
+        },
+      ]),
+      intervals: [600, 600, 3000, 300, 300, 300],
+      averageDuration: 45,
+      averageInterval: 850,
+    }
+
+    const result = buildTrendSummary({ metrics1h, metrics2h })
+
+    expect(result.intervalTrend.currentAverage).toBe(300)
+    expect(result.intervalTrend.previousAverage).toBe(850)
+    expect(result.intervalTrend.label).toBe('shortening')
+    expect(result.summaryLabel).toContain('encurtando')
+  })
+
+  it('buildTrendSummary cobre os demais labels de resumo para spacing e stable', () => {
+    const spacingResult = buildTrendSummary({
+      metrics1h: {
+        contractions: [
+          { start: new Date('2026-03-21T10:00:00.000Z') },
+          { start: new Date('2026-03-21T10:07:00.000Z') },
+          { start: new Date('2026-03-21T10:14:00.000Z') },
+        ],
+        intervals: [420, 420],
+        averageDuration: 45,
+        averageInterval: 420,
+      },
+      metrics2h: {
+        contractions: [
+          { start: new Date('2026-03-21T08:00:00.000Z') },
+          { start: new Date('2026-03-21T08:05:00.000Z') },
+          { start: new Date('2026-03-21T08:10:00.000Z') },
+        ],
+        intervals: [300, 300],
+        averageDuration: 45,
+        averageInterval: 300,
+      },
+    })
+
+    const stableRegularResult = buildTrendSummary({
+      metrics1h: {
+        contractions: [
+          { start: new Date('2026-03-21T10:00:00.000Z') },
+          { start: new Date('2026-03-21T10:06:00.000Z') },
+          { start: new Date('2026-03-21T10:12:00.000Z') },
+          { start: new Date('2026-03-21T10:18:00.000Z') },
+        ],
+        intervals: [360, 360, 360],
+        averageDuration: 45,
+        averageInterval: 360,
+      },
+      metrics2h: {
+        contractions: [
+          { start: new Date('2026-03-21T08:00:00.000Z') },
+          { start: new Date('2026-03-21T08:06:00.000Z') },
+          { start: new Date('2026-03-21T08:12:05.000Z') },
+          { start: new Date('2026-03-21T08:18:00.000Z') },
+        ],
+        intervals: [360, 365, 355],
+        averageDuration: 45,
+        averageInterval: 360,
+      },
+    })
+
+    const stableIrregularResult = buildTrendSummary({
+      metrics1h: {
+        contractions: [
+          { start: new Date('2026-03-21T10:00:00.000Z') },
+          { start: new Date('2026-03-21T10:04:00.000Z') },
+          { start: new Date('2026-03-21T10:10:00.000Z') },
+          { start: new Date('2026-03-21T10:14:30.000Z') },
+        ],
+        intervals: [240, 360, 270],
+        averageDuration: 45,
+        averageInterval: 290,
+      },
+      metrics2h: {
+        contractions: [
+          { start: new Date('2026-03-21T08:00:00.000Z') },
+          { start: new Date('2026-03-21T08:05:00.000Z') },
+          { start: new Date('2026-03-21T08:09:40.000Z') },
+          { start: new Date('2026-03-21T08:14:30.000Z') },
+        ],
+        intervals: [300, 280, 290],
+        averageDuration: 45,
+        averageInterval: 290,
+      },
+    })
+
+    expect(spacingResult.summaryLabel).toContain('espa')
+    expect(stableRegularResult.summaryLabel).toContain('est')
+    expect(stableRegularResult.summaryLabel).toContain('consistente')
+    expect(stableIrregularResult.summaryLabel).toContain('sem mudan')
+  })
+
+  it('buildTrendSummary cobre o resumo de encurtamento sem regularidade', () => {
+    const result = buildTrendSummary({
+      metrics1h: {
+        contractions: [
+          { start: new Date('2026-03-21T10:00:00.000Z') },
+          { start: new Date('2026-03-21T10:04:00.000Z') },
+          { start: new Date('2026-03-21T10:10:00.000Z') },
+          { start: new Date('2026-03-21T10:14:30.000Z') },
+        ],
+        intervals: [240, 360, 270],
+        averageDuration: 45,
+        averageInterval: 290,
+      },
+      metrics2h: {
+        contractions: [
+          { start: new Date('2026-03-21T08:00:00.000Z') },
+          { start: new Date('2026-03-21T08:06:00.000Z') },
+          { start: new Date('2026-03-21T08:12:00.000Z') },
+          { start: new Date('2026-03-21T08:18:00.000Z') },
+        ],
+        intervals: [360, 360, 360],
+        averageDuration: 45,
+        averageInterval: 360,
+      },
+    })
+
+    expect(result.intervalTrend.label).toBe('shortening')
+    expect(result.regularity.label).toBe('irregular')
+    expect(result.summaryLabel).toContain('encurtando')
   })
 })

@@ -8,6 +8,44 @@ function getUrgencyLabel(urgency) {
   return DECISION_COPY.ui.currentSituation
 }
 
+function normalizeCopy(value) {
+  return (value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim()
+}
+
+function isDistinctCopy(candidate, references) {
+  const normalizedCandidate = normalizeCopy(candidate)
+  if (!normalizedCandidate) return false
+
+  return references.every((reference) => normalizeCopy(reference) !== normalizedCandidate)
+}
+
+function buildReasonLine({ decision, trendSummary, fallback }) {
+  const observation = decision.actionPlan.observation
+  const references = [decision.actionPlan.action, decision.pattern.label]
+
+  if (
+    decision.warningSignal.level !== 'calm' &&
+    isDistinctCopy(fallback, references)
+  ) {
+    return fallback
+  }
+
+  if (isDistinctCopy(observation, references)) {
+    return observation
+  }
+
+  if (trendSummary?.summaryLabel && isDistinctCopy(trendSummary.summaryLabel, references)) {
+    return trendSummary.summaryLabel
+  }
+
+  return fallback
+}
+
 function buildMetricLine({ metrics, formatDuration }) {
   const details = []
 
@@ -16,33 +54,40 @@ function buildMetricLine({ metrics, formatDuration }) {
   }
 
   if (metrics.averageDuration) {
-    details.push(`duracao ${formatDuration(metrics.averageDuration)}`)
+    details.push(`dura\u00e7\u00e3o ${formatDuration(metrics.averageDuration)}`)
   }
 
-  return details.join(' - ')
+  return details.join(' • ')
 }
 
 export function mapDecisionToDecisionCardViewModel({ decision, metrics, trendSummary, formatDuration }) {
+  const fallbackReason =
+    decision.warningSignal.level === 'critical'
+      ? DECISION_COPY.precedence.warningSignal.observationCritical
+      : decision.warningSignal.level === 'warning'
+        ? DECISION_COPY.precedence.warningSignal.observationWarning
+        : trendSummary?.summaryLabel || decision.pattern.patternLabel || DECISION_COPY.ui.lowDataReason
+
+  const reasonLine = buildReasonLine({
+    decision,
+    trendSummary,
+    fallback: fallbackReason,
+  })
+
   return {
     eyebrow: DECISION_COPY.ui.currentReading,
-    badgeLabel: decision.actionPlan.action,
+    badgeLabel: getUrgencyLabel(decision.decision.urgency),
     urgencyLabel: getUrgencyLabel(decision.decision.urgency),
     readingLabel: DECISION_COPY.ui.patternLabel,
     readingTitle: decision.pattern.label,
     actionLabel: DECISION_COPY.ui.actionLabel,
+    reasonLabel: DECISION_COPY.ui.reasonLabel,
     actionTitle: decision.actionPlan.action,
-    observation: decision.actionPlan.observation,
-    interpretation: decision.actionPlan.interpretation,
+    reasonLine,
     limitation: decision.actionPlan.limitation,
     adjustmentCopy: formatAdjustmentCopy(decision.readingAdjustmentReasons),
     metricLine: buildMetricLine({ metrics, formatDuration }),
     urgency: decision.decision.urgency,
     isCritical: decision.decision.urgency === 'critical',
-    primaryReason:
-      decision.warningSignal.level === 'critical'
-        ? DECISION_COPY.precedence.warningSignal.observationCritical
-        : decision.warningSignal.level === 'warning'
-          ? DECISION_COPY.precedence.warningSignal.observationWarning
-          : trendSummary?.summaryLabel || decision.pattern.patternLabel || DECISION_COPY.ui.lowDataReason,
   }
 }

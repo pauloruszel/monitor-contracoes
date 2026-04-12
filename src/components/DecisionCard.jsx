@@ -22,22 +22,31 @@ function DecisionCard({ viewModel }) {
         </div>
       ) : null}
 
-      <div className="decision-card-header">
-        <div>
+      <div className="decision-card-body">
+        <div className="decision-primary-block">
+          <p className="decision-action-label">{viewModel.actionLabel}</p>
+          <p className="decision-action">{viewModel.actionTitle}</p>
+        </div>
+
+        <div className="decision-reading-block">
           <p className="inline-phase-label">{viewModel.readingLabel}</p>
           <h2>{viewModel.readingTitle}</h2>
         </div>
-      </div>
-
-      <div className="decision-card-body">
-        <p className="decision-action-label">{viewModel.actionLabel}</p>
-        <p className="decision-action">{viewModel.actionTitle}</p>
         {viewModel.adjustmentCopy ? <p className="decision-adjustment">{viewModel.adjustmentCopy}</p> : null}
-        <p className="decision-why">{viewModel.primaryReason}</p>
-        <p className="decision-why">{viewModel.observation}</p>
-        <p className="decision-why">{viewModel.interpretation}</p>
-        {viewModel.limitation ? <p className="decision-adjustment">{viewModel.limitation}</p> : null}
-        {viewModel.metricLine ? <p className="decision-metrics">{viewModel.metricLine}</p> : null}
+
+        <div className="decision-support-block">
+          <div className="decision-reason-block">
+            <p className="decision-meta-label">{viewModel.reasonLabel}</p>
+            <p className="decision-summary">{viewModel.reasonLine}</p>
+          </div>
+        </div>
+
+        {viewModel.metricLine || viewModel.limitation ? (
+          <div className="decision-footer-block">
+            {viewModel.metricLine ? <p className="decision-metrics">{viewModel.metricLine}</p> : null}
+            {viewModel.limitation ? <p className="decision-limitation">{viewModel.limitation}</p> : null}
+          </div>
+        ) : null}
       </div>
     </section>
   )

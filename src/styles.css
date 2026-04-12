@@ -293,29 +293,55 @@ a {
   font-weight: 700;
 }
 
-.decision-card-header {
-  margin-bottom: 12px;
-}
-
-.decision-card-header h2 {
-  margin: 4px 0 0;
-  font-size: clamp(1.5rem, 4vw, 2.2rem);
-}
-
 .decision-card-body {
+  display: grid;
+  gap: 14px;
+}
+
+.decision-card-critical .decision-card-body {
+  gap: 16px;
+}
+
+.decision-primary-block {
+  display: grid;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(244, 232, 214, 0.72));
+  border: 1px solid rgba(196, 107, 63, 0.16);
+}
+
+.decision-reading-block {
+  display: grid;
+  gap: 6px;
+}
+
+.decision-reading-block h2 {
+  margin: 0;
+  font-size: clamp(1.3rem, 3.5vw, 1.75rem);
+  color: #183153;
+}
+
+.decision-support-block {
+  display: grid;
+  gap: 8px;
+}
+
+.decision-reason-block {
+  display: grid;
+  gap: 4px;
+}
+
+.decision-footer-block {
   display: grid;
   gap: 8px;
   padding-top: 12px;
   border-top: 1px solid rgba(36, 52, 71, 0.08);
 }
 
-.decision-card-critical .decision-card-body {
-  gap: 10px;
-}
-
 .decision-action-label {
   margin: 0;
-  color: #5f7081;
+  color: #7f4b2c;
   font-size: 0.82rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -324,50 +350,81 @@ a {
 
 .decision-action {
   margin: 0;
-  font-size: clamp(1.05rem, 3vw, 1.35rem);
-  font-weight: 700;
+  font-size: clamp(1.45rem, 4.2vw, 2.1rem);
+  line-height: 1.05;
+  font-weight: 800;
   color: #183153;
 }
 
 .decision-adjustment {
   margin: 0;
   color: #7a5314;
-  font-size: 0.94rem;
+  font-size: 0.9rem;
   font-weight: 700;
 }
 
 .decision-card-critical .decision-action {
-  font-size: clamp(1.15rem, 3.6vw, 1.6rem);
+  font-size: clamp(1.55rem, 4.6vw, 2.2rem);
   color: #7f1919;
+}
+
+.decision-summary {
+  margin: 0;
+  font-weight: 700;
+  color: #43586d;
+}
+
+.decision-meta-label {
+  margin: 0;
+  color: #6b7a88;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .decision-why {
   margin: 0;
-  font-weight: 700;
-  color: #33485d;
+  font-weight: 600;
+  color: #2f4253;
 }
 
 .decision-card-critical .decision-why {
   color: #7f1919;
 }
 
-.decision-card-critical .decision-adjustment {
-  color: #8d1f1f;
-}
-
 .decision-metrics {
   margin: 0;
   color: #506174;
   font-size: 0.95rem;
+  font-weight: 700;
 }
 
 .decision-support {
-  margin-bottom: 0;
-  font-size: 0.92rem;
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #30475c;
+}
+
+.decision-limitation {
+  margin: 0;
+  color: #6e7c89;
+  font-size: 0.88rem;
+}
+
+.decision-card-critical .decision-adjustment {
+  color: #8d1f1f;
+}
+
+.decision-card-critical .decision-summary,
+.decision-card-critical .decision-support,
+.decision-card-critical .decision-limitation,
+.decision-card-critical .decision-meta-label {
+  color: #6a3434;
 }
 
 .decision-card-critical .decision-metrics,
-.decision-card-critical .decision-support,
 .decision-card-critical .decision-action-label,
 .decision-card-critical .inline-phase-label,
 .decision-card-critical .decision-eyebrow {
@@ -1178,21 +1235,16 @@ a {
     padding: 12px 14px;
   }
 
-  .decision-card-header {
-    margin-bottom: 10px;
-  }
-
-  .decision-card-header h2 {
-    font-size: clamp(1.3rem, 6vw, 1.7rem);
-  }
-
   .decision-card-body {
-    gap: 6px;
-    padding-top: 10px;
+    gap: 12px;
   }
 
   .action-primary-block {
     padding: 14px;
+  }
+
+  .decision-primary-block {
+    padding: 13px 14px;
   }
 
   .action-main-button {
@@ -1200,7 +1252,8 @@ a {
   }
 
   .decision-metrics,
-  .decision-support {
+  .decision-support,
+  .decision-limitation {
     font-size: 0.88rem;
   }
 

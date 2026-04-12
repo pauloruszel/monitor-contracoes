@@ -49,6 +49,7 @@ export const DECISION_COPY = {
     currentReading: 'Leitura atual',
     patternLabel: 'Leitura do padr\u00e3o',
     actionLabel: 'Conduta sugerida',
+    reasonLabel: 'Motivo',
     urgentAction: 'A\u00e7\u00e3o imediata',
     highAttention: 'Aten\u00e7\u00e3o alta',
     closeFollowUp: 'Acompanhar de perto',

@@ -79,6 +79,26 @@ describe('decisionEngine', () => {
     expect(result.decision.urgency).toBe('calm')
   })
 
+  it('prioriza bem-estar severo quando ha muita dor entre as contracoes', () => {
+    const result = getSessionDecision({
+      contractions: makeContractions(4),
+      intervals: [600, 620, 610],
+      averageDuration: 30,
+      averageInterval: 610,
+      trendSummary: null,
+      warningSignals: {},
+      wellbeingSummary: {
+        dominant: 'red',
+      },
+    })
+
+    expect(result.pattern.key).toBe('prodomos')
+    expect(result.actionPlan.action).toBe('Continuar em casa')
+    expect(result.actionPlan.interpretation).toContain('Muita dor')
+    expect(result.decision.precedenceKey).toBe('wellbeing_severe')
+    expect(result.decision.urgency).toBe('calm')
+  })
+
   it('prioriza sangramento mesmo com poucos dados temporais', () => {
     const result = getSessionDecision({
       contractions: makeContractions(1),

@@ -9,13 +9,13 @@ const markers = [
 ]
 
 const zoneStops = [
-  { label: 'Pródromos', min: 10, max: 16, color: '#92a8d1' },
-  { label: 'Latente', min: 5, max: 10, color: '#f2c66d' },
-  { label: 'Ativa', min: 3, max: 5, color: '#f28c52' },
-  { label: 'Transição', min: 0, max: 3, color: '#d9534f' },
+  { label: 'Mais espaçado', min: 10, max: 16, color: '#92a8d1' },
+  { label: 'Faixa intermediária', min: 5, max: 10, color: '#f2c66d' },
+  { label: 'Mais próximo', min: 3, max: 5, color: '#f28c52' },
+  { label: 'Muito frequente', min: 0, max: 3, color: '#d9534f' },
 ]
 
-const visualOnlyPhases = ['Expulsivo', 'Placenta']
+const visualOnlyZones = ['Leitura visual', 'Não diagnóstico']
 
 const WIDTH = 100
 const HEIGHT = 176
@@ -125,11 +125,11 @@ function TimelineChart({ contractions, averageInterval, formatDuration, formatCl
         ) : null}
       </svg>
       <div className="timeline-legend">
-        <span className="legend-chip">Pródromos</span>
-        <span className="legend-chip">Latente</span>
-        <span className="legend-chip">Ativa</span>
-        <span className="legend-chip">Transição</span>
-        {visualOnlyPhases.map((label) => (
+        <span className="legend-chip">Mais espaçado</span>
+        <span className="legend-chip">Faixa intermediária</span>
+        <span className="legend-chip">Mais próximo</span>
+        <span className="legend-chip">Muito frequente</span>
+        {visualOnlyZones.map((label) => (
           <span className="legend-chip legend-chip-muted" key={label}>
             {label}
           </span>
