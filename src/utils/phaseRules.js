@@ -1,3 +1,5 @@
+import { getAdjustmentReasons } from './sessionContextUtils'
+
 export const PHASES = {
   prodomos: {
     key: 'prodomos',
@@ -97,6 +99,13 @@ export function evaluateProfileAdjustments({
       ? 'A sensibilidade de alerta está configurada para acompanhar mudanças mais cedo.'
       : '',
   ])
+
+  result.adjustmentReasons = getAdjustmentReasons({
+    phaseKey: phaseResult.key,
+    trendSummary,
+    userProfile,
+    clinicalPreferences,
+  })
 
   return result
 }

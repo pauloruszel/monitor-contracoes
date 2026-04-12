@@ -34,15 +34,7 @@ function buildMetricLine({ metrics, formatDuration }) {
   return details.join(' • ')
 }
 
-function buildActionCopy({ urgency, recommendation }) {
-  if (urgency === 'critical') {
-    return recommendation.title
-  }
-
-  if (urgency === 'warning') {
-    return recommendation.title
-  }
-
+function buildActionCopy({ recommendation }) {
   return recommendation.title
 }
 
@@ -61,6 +53,7 @@ function DecisionCard({
   trendSummary,
   metrics,
   formatDuration,
+  adjustmentCopy = '',
 }) {
   const primaryReason = buildPrimaryReason({
     warningAssessment,
@@ -68,7 +61,7 @@ function DecisionCard({
     phase,
   })
   const metricLine = buildMetricLine({ metrics, formatDuration })
-  const actionCopy = buildActionCopy({ urgency, recommendation })
+  const actionCopy = buildActionCopy({ recommendation })
   const isCritical = urgency === 'critical'
   const cardClassName = [
     'card',
@@ -99,10 +92,9 @@ function DecisionCard({
       </div>
 
       <div className="decision-card-body">
-        <p className="decision-action-label">
-          {isCritical ? getUrgencyLabel(urgency) : 'O que fazer agora'}
-        </p>
+        <p className="decision-action-label">Conduta sugerida</p>
         <p className="decision-action">{actionCopy}</p>
+        {adjustmentCopy ? <p className="decision-adjustment">{adjustmentCopy}</p> : null}
         <p className="decision-why">{primaryReason}</p>
         {metricLine ? <p className="decision-metrics">{metricLine}</p> : null}
       </div>

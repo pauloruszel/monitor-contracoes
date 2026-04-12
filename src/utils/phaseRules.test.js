@@ -25,7 +25,10 @@ describe('phaseRules', () => {
 
   it('evaluateProfileAdjustments mantem o resultado base nesta fase', () => {
     const phaseResult = { key: 'latente' }
-    expect(evaluateProfileAdjustments({ phaseResult })).toEqual(phaseResult)
+    expect(evaluateProfileAdjustments({ phaseResult })).toMatchObject({
+      key: 'latente',
+      adjustmentReasons: [],
+    })
   })
 
   it('retorna poucos dados quando ainda nao ha base suficiente', () => {
@@ -41,7 +44,8 @@ describe('phaseRules', () => {
     expect(result.key).toBe('prodomos')
     expect(result.patternLabel).toBe('Poucos dados')
     expect(result.alertKey).toBe('')
-    expect(modularResult).toEqual(result)
+    expect(modularResult).toEqual(evaluatePhaseRules(input))
+    expect(result.adjustmentReasons).toEqual([])
   })
 
   it('considera padrao regular quando ha menos de tres intervalos', () => {
@@ -227,6 +231,9 @@ describe('phaseRules', () => {
     expect(result.description).toContain('A duração média também está aumentando.')
     expect(result.description).toContain('Como já houve parto rápido')
     expect(result.description).toContain('sensibilidade de alerta')
+    expect(result.adjustmentReasons).toHaveLength(2)
+    expect(result.adjustmentReasons[0]).toContain('parto')
+    expect(result.adjustmentReasons[1]).toBe('sensibilidade alta de alerta')
   })
 
   it('buildRecommendation usa preferencia de aviso cedo e adiciona contexto', () => {
@@ -264,3 +271,7 @@ describe('phaseRules', () => {
     expect(result.secondary).toContain('5-1-1')
   })
 })
+
+
+
+

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import DecisionCard from '../components/DecisionCard'
 import CollapsibleSection from '../components/CollapsibleSection'
 import MetricsCard from '../components/MetricsCard'
+import SessionContextSummaryCard from '../components/SessionContextSummaryCard'
 import TimelineChart from '../components/TimelineChart'
 import WarningSignalsCard from '../components/WarningSignalsCard'
 import HistoryList from '../components/HistoryList'
@@ -19,6 +20,7 @@ import {
   normalizeContractions,
 } from '../utils/contractionUtils'
 import { getPhaseFromMetrics, getRecommendationFromPhase } from '../utils/phaseRules'
+import { formatAdjustmentCopy } from '../utils/sessionContextUtils'
 import { getWarningSignalAssessment } from '../utils/warningSignals'
 import { getSessionByShareToken, subscribeToSession } from '../services/firebaseSharingService'
 
@@ -215,8 +217,18 @@ function DoulaViewPage({ shareToken }) {
         averageDuration,
         averageInterval,
         trendSummary,
+        userProfile: session?.userProfile,
+        clinicalPreferences: session?.clinicalPreferences,
       }),
-    [recentContractions, intervals, averageDuration, averageInterval, trendSummary],
+    [
+      recentContractions,
+      intervals,
+      averageDuration,
+      averageInterval,
+      trendSummary,
+      session?.userProfile,
+      session?.clinicalPreferences,
+    ],
   )
   const warningAssessment = useMemo(
     () => getWarningSignalAssessment(warningSignals),
@@ -230,8 +242,18 @@ function DoulaViewPage({ shareToken }) {
         secondary: 'O alerta vem antes da leitura do ritmo.',
       }
     }
-    return getRecommendationFromPhase(phase.key, { trendSummary })
-  }, [phase.key, warningAssessment, trendSummary])
+    return getRecommendationFromPhase(phase.key, {
+      trendSummary,
+      userProfile: session?.userProfile,
+      clinicalPreferences: session?.clinicalPreferences,
+    })
+  }, [
+    phase.key,
+    warningAssessment,
+    trendSummary,
+    session?.userProfile,
+    session?.clinicalPreferences,
+  ])
 
   const syncStatus = useMemo(
     () =>
@@ -302,6 +324,7 @@ function DoulaViewPage({ shareToken }) {
           trendSummary={trendSummary}
           metrics={metrics}
           formatDuration={formatDuration}
+          adjustmentCopy={formatAdjustmentCopy(phase.adjustmentReasons)}
         />
         <WarningSignalsCard
           signals={warningSignals}
@@ -310,6 +333,12 @@ function DoulaViewPage({ shareToken }) {
           open
           onToggleOpen={() => {}}
           readOnly
+        />
+        <SessionContextSummaryCard
+          sessionContext={session?.sessionContext}
+          userProfile={session?.userProfile}
+          clinicalPreferences={session?.clinicalPreferences}
+          mode="doula"
         />
         <MetricsCard metrics={metrics} formatDuration={formatDuration} />
         <CollapsibleSection

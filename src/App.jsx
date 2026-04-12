@@ -5,14 +5,15 @@ import CurrentContractionCard from './components/CurrentContractionCard'
 import MetricsCard from './components/MetricsCard'
 import TimelineChart from './components/TimelineChart'
 import HistoryList from './components/HistoryList'
-import SessionNotesCard from './components/SessionNotesCard'
+import SessionContextFormCard from './components/SessionContextFormCard'
 import DoulaContactCard from './components/DoulaContactCard'
-import UserProfileCard from './components/UserProfileCard'
+import UserProfileCardV2 from './components/UserProfileCardV2'
 import GuidanceCard from './components/GuidanceCard'
 import ManualModal from './components/ManualModal'
 import WarningSignalsCard from './components/WarningSignalsCard'
 import SharingCard from './components/SharingCard'
-import ClinicalPreferencesCard from './components/ClinicalPreferencesCard'
+import ClinicalPreferencesCardV2 from './components/ClinicalPreferencesCardV2'
+import SessionContextSummaryCard from './components/SessionContextSummaryCard'
 import DoulaViewPage from './pages/DoulaViewPage'
 import {
   buildTrendSummary,
@@ -35,6 +36,7 @@ import { getPhaseFromMetrics, getRecommendationFromPhase } from './utils/phaseRu
 import {
   clearStorage,
   defaultClinicalPreferences,
+  defaultSessionContext,
   defaultUserProfile,
   defaultWarningSignals,
   loadFromStorage,
@@ -57,6 +59,7 @@ import {
   triggerSoundAlert,
   triggerVoiceAlert,
 } from './utils/alertUtils'
+import { formatAdjustmentCopy } from './utils/sessionContextUtils'
 
 const ANALYSIS_WINDOW = 5
 const initialStored = loadFromStorage()
@@ -129,7 +132,9 @@ function MonitorPage() {
   const [warningSignals, setWarningSignals] = useState(
     initialStored.warningSignals || defaultWarningSignals,
   )
-  const [sessionNotes, setSessionNotes] = useState(initialStored.sessionNotes || '')
+  const [sessionContext, setSessionContext] = useState(
+    initialStored.sessionContext || defaultSessionContext,
+  )
   const [userProfile, setUserProfile] = useState(initialStored.userProfile || defaultUserProfile)
   const [clinicalPreferences, setClinicalPreferences] = useState(
     initialStored.clinicalPreferences || defaultClinicalPreferences,
@@ -180,7 +185,7 @@ function MonitorPage() {
       lastAlertKey,
       sharedSession,
       warningSignals,
-      sessionNotes,
+      sessionContext,
       userProfile,
       clinicalPreferences,
     })
@@ -192,7 +197,7 @@ function MonitorPage() {
     lastAlertKey,
     sharedSession,
     warningSignals,
-    sessionNotes,
+    sessionContext,
     userProfile,
     clinicalPreferences,
   ])
@@ -413,7 +418,7 @@ function MonitorPage() {
     setLastAlertKey('')
     setSharedSession(null)
     setWarningSignals(defaultWarningSignals)
-    setSessionNotes('')
+    setSessionContext(defaultSessionContext)
     setUserProfile(defaultUserProfile)
     setClinicalPreferences(defaultClinicalPreferences)
     setSyncStatus(sharedSession ? 'Dados locais e compartilhados apagados.' : '')
@@ -440,6 +445,13 @@ function MonitorPage() {
     }))
   }
 
+  const handleSessionContextChange = (key, value) => {
+    setSessionContext((current) => ({
+      ...current,
+      [key]: value,
+    }))
+  }
+
   const handleStartSharing = async () => {
     try {
       const createdSession = await createSharedSession({ doulaPhone })
@@ -450,7 +462,7 @@ function MonitorPage() {
 
       try {
         await syncSessionContext(nextSharedSession, {
-          sessionNotes,
+          sessionContext,
           userProfile,
           clinicalPreferences,
         })
@@ -534,7 +546,7 @@ function MonitorPage() {
     async function runSync() {
       try {
         await syncSessionContext(sharedSession, {
-          sessionNotes,
+          sessionContext,
           userProfile,
           clinicalPreferences,
         })
@@ -546,7 +558,7 @@ function MonitorPage() {
     }
 
     runSync()
-  }, [sharedSession, sessionNotes, userProfile, clinicalPreferences])
+  }, [sharedSession, sessionContext, userProfile, clinicalPreferences])
 
   const metrics = {
     totalContractions: contractions.length,
@@ -694,6 +706,7 @@ function MonitorPage() {
           trendSummary={trendSummary}
           metrics={metrics}
           formatDuration={formatDuration}
+          adjustmentCopy={formatAdjustmentCopy(phase.adjustmentReasons)}
         />
         <CurrentContractionCard
           activeContraction={activeContraction}
@@ -749,9 +762,18 @@ function MonitorPage() {
           onToggle={() => setSessionContextOpen((current) => !current)}
           countLabel="contexto"
         >
-          <SessionNotesCard sessionNotes={sessionNotes} onChangeNotes={setSessionNotes} />
-          <UserProfileCard userProfile={userProfile} onChangeProfile={handleProfileChange} />
-          <ClinicalPreferencesCard
+          <SessionContextSummaryCard
+            sessionContext={sessionContext}
+            userProfile={userProfile}
+            clinicalPreferences={clinicalPreferences}
+            mode="monitor"
+          />
+          <SessionContextFormCard
+            sessionContext={sessionContext}
+            onChangeContext={handleSessionContextChange}
+          />
+          <UserProfileCardV2 userProfile={userProfile} onChangeProfile={handleProfileChange} />
+          <ClinicalPreferencesCardV2
             clinicalPreferences={clinicalPreferences}
             onChangePreference={handlePreferenceChange}
           />

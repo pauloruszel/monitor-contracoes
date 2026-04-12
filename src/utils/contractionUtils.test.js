@@ -274,8 +274,14 @@ describe('contractionUtils', () => {
     expect(getLastItems([1, 2], 5)).toEqual([1, 2])
   })
 
-  it('normalizeContractions converte datas serializadas', () => {
+  it('normalizeContractions converte datas serializadas e ordena por inicio', () => {
     const result = normalizeContractions([
+      {
+        id: '2',
+        start: '2026-03-21T10:05:00.000Z',
+        end: '2026-03-21T10:05:45.000Z',
+        durationSeconds: 45,
+      },
       {
         id: '1',
         start: '2026-03-21T10:00:00.000Z',
@@ -286,6 +292,7 @@ describe('contractionUtils', () => {
 
     expect(result[0].start).toBeInstanceOf(Date)
     expect(result[0].end).toBeInstanceOf(Date)
+    expect(result.map((item) => item.id)).toEqual(['1', '2'])
   })
 
   it('getWellbeingSummary resume os ultimos estados', () => {

@@ -183,11 +183,13 @@ export function getLastItems(items, size) {
 }
 
 export function normalizeContractions(contractions) {
-  return contractions.map((contraction) => ({
-    ...contraction,
-    start: new Date(contraction.start),
-    end: new Date(contraction.end),
-  }))
+  return contractions
+    .map((contraction) => ({
+      ...contraction,
+      start: new Date(contraction.start),
+      end: new Date(contraction.end),
+    }))
+    .sort((a, b) => a.start.getTime() - b.start.getTime())
 }
 
 export function formatDuration(totalSeconds) {
