@@ -329,6 +329,13 @@ a {
   color: #183153;
 }
 
+.decision-adjustment {
+  margin: 0;
+  color: #7a5314;
+  font-size: 0.94rem;
+  font-weight: 700;
+}
+
 .decision-card-critical .decision-action {
   font-size: clamp(1.15rem, 3.6vw, 1.6rem);
   color: #7f1919;
@@ -342,6 +349,10 @@ a {
 
 .decision-card-critical .decision-why {
   color: #7f1919;
+}
+
+.decision-card-critical .decision-adjustment {
+  color: #8d1f1f;
 }
 
 .decision-metrics {
@@ -741,6 +752,45 @@ a {
 
 .compact-text {
   margin-bottom: 0;
+}
+
+.context-block + .context-block {
+  margin-top: 14px;
+}
+
+.context-block-label {
+  margin: 0 0 8px;
+  color: #5f7081;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.context-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.context-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #f8eee5;
+  color: #7d4d2a;
+  font-weight: 700;
+}
+
+.context-chip-muted {
+  background: #eef2f7;
+  color: #44576b;
+}
+
+.context-notes {
+  margin-bottom: 0;
+  white-space: pre-wrap;
 }
 
 .collapsible-section {

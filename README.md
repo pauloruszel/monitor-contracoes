@@ -1,96 +1,139 @@
-﻿# Monitor de Contrações
+# Monitor de Contracoes
 
-Aplicativo web para acompanhar contrações durante o trabalho de parto, com foco no uso prático pelo acompanhante e opção de compartilhamento em tempo real com a doula.
+Aplicativo web para acompanhar contracoes durante o trabalho de parto, com foco no uso pratico pelo acompanhante e com opcao de compartilhamento em tempo real com a doula.
 
-## Visão Geral
+## Visao Geral
 
 O projeto foi desenhado para uso simples no celular, com prioridade para:
 
-- registrar contrações com poucos toques
-- interpretar o padrão recente sem contas manuais
-- destacar a próxima ação sugerida
+- registrar contracoes com poucos toques
+- interpretar o padrao recente sem contas manuais
+- destacar a proxima acao sugerida
 - registrar sinais de alerta relevantes
-- compartilhar a sessão com a doula quando necessário
+- compartilhar a sessao com a doula quando necessario
 
-O app continua sendo **offline-first** no modo normal. O Firebase é usado apenas no modo compartilhado.
+O app continua sendo **offline-first** no modo principal. O Firebase e usado apenas no modo compartilhado.
 
-> Importante: este app é um apoio de monitoramento e não substitui orientação médica, obstétrica ou da doula.
+> Importante: este app e um apoio de monitoramento e nao substitui orientacao medica, obstetrica ou da doula.
 
-## O Que O App Faz Hoje
+## Estado Atual do App
 
 ### Monitoramento principal
 
-- Início e fim de cada contração
-- Cronômetro em tempo real
-- Cálculo automático de duração e intervalo
-- Duração média e intervalo médio
-- Histórico local persistido no navegador
+- Inicio e fim de cada contracao
+- Cronometro em tempo real
+- Calculo automatico de duracao e intervalo
+- Duracao media e intervalo medio
+- Historico local persistido no navegador
 
 ### Leitura do momento
 
-- Fase provável do trabalho de parto
+- Leitura do padrao atual
 - Conduta sugerida no topo da tela
-- Motivo curto para a recomendação
-- Tendência recente com base em janelas temporais
+- Separacao entre observacao, interpretacao, acao e limitacao
+- Linha de ajuste explicando quando contexto clinico influenciou a leitura
+- Tendencia recente com base em janelas temporais de 1h e 2h
 
-### Contexto clínico local
+### Contexto clinico local
 
-- Observações da sessão
-- Perfil da gestação
-- Preferências clínicas locais
-- Bem-estar durante a contração
+- Contexto da sessao estruturado
+- Notas livres da sessao
+- Perfil da gestacao
+- Preferencias clinicas locais
+- Bem-estar durante a contracao
 
 ### Sinais de alerta
 
-- Perda do tampão
+- Perda do tampao
 - Bolsa rompeu
-- Líquido verde ou marrom
-- Menos movimentos do bebê
+- Liquido verde ou marrom
+- Menos movimentos do bebe
 - Sangramento
 - Cheiro ruim ou febre
 - Menos de 37 semanas
 
 ### Compartilhamento com a doula
 
-- Sessão remota temporária no Firebase Realtime Database
+- Sessao remota temporaria no Firebase Realtime Database
 - Link de leitura para a doula
-- Tela remota com atualização em tempo quase real
-- Encerramento e remoção da sessão compartilhada
+- Tela remota com atualizacao em tempo quase real
+- Resumo do contexto da sessao no modo doula
+- Mesmo contrato de decisao do modo principal
+- Encerramento e remocao da sessao compartilhada
 
 ### Alertas
 
-- Notificação do navegador
+- Notificacao do navegador
 - Voz sintetizada
 - Som curto
 - Destaque visual na interface
 
-## Arquitetura Atual da Interface
+## Arquitetura Atual
 
-A tela principal foi reorganizada para reduzir carga cognitiva em uso real:
+A aplicacao separa o motor clinico em camadas explicitas para reduzir acoplamento entre logica, copy e interface.
 
-- **Nível 1: decisão**
-  Topo decisório com fase provável, conduta sugerida, motivo curto e linha numérica de conferência.
-- **Nível 2: ação**
-  Bloco de contração com cronômetro e botão principal para iniciar ou encerrar.
-- **Nível 3: contexto**
-  Sinais de alerta, métricas resumidas e blocos colapsáveis para timeline, histórico, contexto da sessão e compartilhamento.
+### Camadas do motor
 
-O modo doula segue a mesma lógica visual, mas com foco em leitura remota em vez de operação.
+- `src/engine/temporalPatternEngine.js`
+  Calcula a leitura temporal do padrao com base em intervalos, duracao media e irregularidade.
+- `src/engine/warningSignalEngine.js`
+  Avalia sinais de alerta e define prioridades clinicas que podem sobrepor o padrao temporal.
+- `src/engine/obstetricContextEngine.js`
+  Aplica contexto obstetrico e preferencias locais a leitura e a conduta.
+- `src/engine/carePlanEngine.js`
+  Constroi a conduta base em formato seguro: observacao, interpretacao, acao e limitacao.
+- `src/engine/decisionEngine.js`
+  Orquestra todas as camadas, aplica precedencia e retorna a decisao consolidada.
 
-## Stack
+### Contrato interno da decisao
 
-- React
-- Vite
-- CSS
-- SVG puro para timeline
-- Firebase Realtime Database
-- Vitest
+O motor usa um contrato neutro, centrado em `pattern`, e nao em `phase` como conceito principal.
+
+```js
+{
+  version,
+  input,
+  pattern,
+  temporalPattern,
+  warningSignal,
+  actionPlan,
+  readingAdjustmentReasons,
+  actionAdjustmentReasons,
+  decision,
+}
+```
+
+### Precedencia formal
+
+A precedencia atual e definida em `src/content/decisionCopy.js`:
+
+- `warning_signal_critical`
+- `warning_signal_warning`
+- `wellbeing_severe`
+- `wellbeing_attention`
+- `temporal_pattern`
+
+Isso garante que alerta clinico venha antes do ritmo, e que bem-estar possa ajustar a conduta sem fingir mudanca diagnostica de fase.
+
+### Copy e adaptacao de UI
+
+- `src/content/clinicalCopy.js`
+  Copy clinica de padrao e sinais de alerta.
+- `src/content/decisionCopy.js`
+  Copy de precedencia, labels e versao do motor.
+- `src/content/contextCopy.js`
+  Copy do contexto da sessao e razoes de ajuste.
+- `src/adapters/decisionViewModel.js`
+  Adaptador que transforma a decisao do motor em dados prontos para o card principal e para o modo doula.
 
 ## Estrutura do Projeto
 
 ```text
 src/
+  adapters/
   components/
+  content/
+  engine/
   lib/
   pages/
   services/
@@ -108,7 +151,7 @@ src/
 
 ## Rodando Localmente
 
-### 1. Instalar dependências
+### 1. Instalar dependencias
 
 ```bash
 npm install
@@ -127,7 +170,7 @@ VITE_FIREBASE_MESSAGING_SENDER_ID=123456789012
 VITE_FIREBASE_APP_ID=1:123456789012:web:your_app_id
 ```
 
-Esses valores são consumidos por `src/lib/firebase.js`.
+Esses valores sao consumidos por `src/lib/firebase.js`.
 
 ### 3. Rodar o projeto
 
@@ -141,9 +184,9 @@ npm run dev
 http://localhost:5173/monitor-contracoes/
 ```
 
-## Variáveis de Ambiente
+## Variaveis de Ambiente
 
-Variáveis esperadas no projeto:
+Variaveis esperadas no projeto:
 
 - `VITE_FIREBASE_API_KEY`
 - `VITE_FIREBASE_AUTH_DOMAIN`
@@ -154,15 +197,15 @@ Variáveis esperadas no projeto:
 
 ## Firebase Realtime Database
 
-O Firebase é usado apenas no modo compartilhado. Sem compartilhamento ativo, os dados ficam locais no navegador.
+O Firebase e usado apenas no modo compartilhado. Sem compartilhamento ativo, os dados ficam locais no navegador.
 
 ### Fluxo do compartilhamento
 
-1. A usuária inicia o compartilhamento.
-2. O app cria uma sessão temporária no Realtime Database.
-3. Contrações, sinais de alerta e contexto da sessão são sincronizados.
-4. A doula acessa a sessão por link com hash route.
-5. A sessão pode ser encerrada ou removida.
+1. A usuaria inicia o compartilhamento.
+2. O app cria uma sessao temporaria no Realtime Database.
+3. Contracoes, sinais de alerta e contexto da sessao sao sincronizados.
+4. A doula acessa a sessao por link com hash route.
+5. A sessao pode ser encerrada ou removida.
 
 ### Estrutura principal no banco
 
@@ -179,18 +222,29 @@ sessions/
     contractions/
       {contractionId}/
     warningSignals/
-    sessionNotes
+    sessionContext
     userProfile
     clinicalPreferences
 ```
 
+### Estrutura atual do contexto da sessao
+
+```text
+sessionContext/
+  homeObservationGuidance
+  longTravelToHospital
+  bagReady
+  notes
+```
+
 ### Regras atuais
 
-- Sem autenticação Firebase no MVP
-- Sessão criada só quando o compartilhamento é ativado
+- Sem autenticacao Firebase no MVP
+- Sessao criada so quando o compartilhamento e ativado
 - `shareToken` para leitura pela doula
-- `writerToken` para escrita da usuária
+- `writerToken` para escrita da usuaria
 - Estrutura simples, sem joins nem backend adicional
+- Compatibilidade local com legado de `sessionNotes`, migrado para `sessionContext.notes`
 
 ## Testes
 
@@ -206,45 +260,23 @@ npm test
 npm run build
 ```
 
-## Deploy
+## Observacoes Importantes
 
-O projeto está preparado para deploy estático via GitHub Pages.
-
-### Workflow
-
-O deploy automático ocorre a partir da branch `main` via `.github/workflows/deploy.yml`.
-
-### Repository Variables esperadas no GitHub
-
-Configure em:
-
-`Settings` -> `Secrets and variables` -> `Actions` -> `Variables`
-
-Variáveis necessárias:
-
-- `VITE_FIREBASE_API_KEY`
-- `VITE_FIREBASE_AUTH_DOMAIN`
-- `VITE_FIREBASE_DATABASE_URL`
-- `VITE_FIREBASE_PROJECT_ID`
-- `VITE_FIREBASE_MESSAGING_SENDER_ID`
-- `VITE_FIREBASE_APP_ID`
-
-## Observações Importantes
-
-- O modo normal do app continua local e persistido no navegador.
-- O Firebase não substitui o modo offline; ele só complementa o compartilhamento.
-- O link da doula é somente leitura.
-- Alertas clínicos têm prioridade sobre o ritmo temporal.
-- O app não confirma estágio clínico do parto.
+- O modo principal do app continua local e persistido no navegador.
+- O Firebase nao substitui o modo offline; ele so complementa o compartilhamento.
+- O link da doula e somente leitura.
+- Alertas clinicos tem prioridade sobre o ritmo temporal.
+- O app usa heuristicas explicaveis para leitura do padrao, nao confirmacao diagnostica de fase.
+- O motor esta versionado em `DECISION_ENGINE_VERSION` para auditoria futura.
 
 ## Roadmap Imediato
 
-- Refinar polimento visual após a nova hierarquia P5
-- Expandir regras clínicas sobre tendência e contexto
-- Evoluir proteção por token no Realtime Database
-- Melhorar cobertura de testes de interface e fluxo
-- Preparar exportação de sessão e relatório
+- Revisar o conteudo clinico com validacao profissional formal
+- Refinar a apresentacao visual de observacao, interpretacao e acao no card principal
+- Evoluir protecao por token e regras de acesso no Realtime Database
+- Melhorar cobertura de testes de interface e fluxo remoto
+- Preparar exportacao de sessao e relatorio estruturado para doula e equipe
 
-## Licença
+## Licenca
 
-Uso privado do projeto, conforme a necessidade do repositório.
+Uso privado do projeto, conforme a necessidade do repositorio.

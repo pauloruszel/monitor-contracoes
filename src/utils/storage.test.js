@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   clearStorage,
   defaultClinicalPreferences,
+  defaultSessionContext,
   defaultUserProfile,
   defaultWarningSignals,
   loadFromStorage,
@@ -28,7 +29,7 @@ describe('storage', () => {
       lastAlertKey: '',
       sharedSession: null,
       warningSignals: defaultWarningSignals,
-      sessionNotes: '',
+      sessionContext: defaultSessionContext,
       userProfile: defaultUserProfile,
       clinicalPreferences: defaultClinicalPreferences,
     })
@@ -44,7 +45,7 @@ describe('storage', () => {
       lastAlertKey: '',
       sharedSession: null,
       warningSignals: defaultWarningSignals,
-      sessionNotes: '',
+      sessionContext: defaultSessionContext,
       userProfile: defaultUserProfile,
       clinicalPreferences: defaultClinicalPreferences,
       ok: true,
@@ -61,7 +62,7 @@ describe('storage', () => {
       lastAlertKey: '',
       sharedSession: null,
       warningSignals: defaultWarningSignals,
-      sessionNotes: '',
+      sessionContext: defaultSessionContext,
       userProfile: defaultUserProfile,
       clinicalPreferences: defaultClinicalPreferences,
     })
@@ -78,9 +79,18 @@ describe('storage', () => {
       lastAlertKey: '',
       sharedSession: null,
       warningSignals: defaultWarningSignals,
-      sessionNotes: '',
+      sessionContext: defaultSessionContext,
       userProfile: defaultUserProfile,
       clinicalPreferences: defaultClinicalPreferences,
+    })
+  })
+
+  it('loadFromStorage migra sessionNotes legado para sessionContext.notes', () => {
+    localStorage.setItem('monitor-contracoes:v1', '{"sessionNotes":"teste legado"}')
+
+    expect(loadFromStorage().sessionContext).toEqual({
+      ...defaultSessionContext,
+      notes: 'teste legado',
     })
   })
 

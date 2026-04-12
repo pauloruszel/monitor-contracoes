@@ -5,14 +5,15 @@ import CurrentContractionCard from './components/CurrentContractionCard'
 import MetricsCard from './components/MetricsCard'
 import TimelineChart from './components/TimelineChart'
 import HistoryList from './components/HistoryList'
-import SessionNotesCard from './components/SessionNotesCard'
+import SessionContextFormCard from './components/SessionContextFormCard'
 import DoulaContactCard from './components/DoulaContactCard'
-import UserProfileCard from './components/UserProfileCard'
+import UserProfileCardV2 from './components/UserProfileCardV2'
 import GuidanceCard from './components/GuidanceCard'
 import ManualModal from './components/ManualModal'
 import WarningSignalsCard from './components/WarningSignalsCard'
 import SharingCard from './components/SharingCard'
-import ClinicalPreferencesCard from './components/ClinicalPreferencesCard'
+import ClinicalPreferencesCardV2 from './components/ClinicalPreferencesCardV2'
+import SessionContextSummaryCard from './components/SessionContextSummaryCard'
 import DoulaViewPage from './pages/DoulaViewPage'
 import {
   buildTrendSummary,
@@ -31,16 +32,15 @@ import {
   normalizeContractions,
   startContraction,
 } from './utils/contractionUtils'
-import { getPhaseFromMetrics, getRecommendationFromPhase } from './utils/phaseRules'
 import {
   clearStorage,
   defaultClinicalPreferences,
+  defaultSessionContext,
   defaultUserProfile,
   defaultWarningSignals,
   loadFromStorage,
   saveToStorage,
 } from './utils/storage'
-import { getWarningSignalAssessment } from './utils/warningSignals'
 import { isFirebaseConfigured } from './lib/firebase'
 import {
   closeSharedSession,
@@ -57,9 +57,12 @@ import {
   triggerSoundAlert,
   triggerVoiceAlert,
 } from './utils/alertUtils'
+import { getSessionDecision } from './engine/decisionEngine'
+import { mapDecisionToDecisionCardViewModel } from './adapters/decisionViewModel'
 
 const ANALYSIS_WINDOW = 5
 const initialStored = loadFromStorage()
+
 function getShareTokenFromHash() {
   const match = window.location.hash.match(/^#\/acompanhar\/([^/]+)$/)
   return match ? match[1] : ''
@@ -70,10 +73,10 @@ function buildShareUrl(shareToken) {
 }
 
 const warningSignalLabels = {
-  mucusPlug: 'Perda do tampão',
+  mucusPlug: 'Perda do tamp\u00e3o',
   watersBroken: 'Bolsa rompeu',
-  meconium: 'Líquido verde ou marrom',
-  reducedMovement: 'Menos movimentos do bebê',
+  meconium: 'L\u00edquido verde ou marrom',
+  reducedMovement: 'Menos movimentos do beb\u00ea',
   bleeding: 'Sangramento',
   badSmellOrFever: 'Cheiro ruim ou febre',
   preterm: 'Menos de 37 semanas',
@@ -98,7 +101,7 @@ function getWhatsAppActionLabel(actionTitle) {
     'Ir ao hospital / procurar atendimento': 'Ir ao hospital / procurar atendimento',
     'Entrar em contato com a maternidade': 'Entrar em contato com a maternidade',
     'Avisar a equipe': 'Avisar a equipe',
-    Observar: 'Observar com atenção',
+    Observar: 'Observar com aten\u00e7\u00e3o',
   }
 
   return labels[actionTitle] || actionTitle
@@ -129,7 +132,9 @@ function MonitorPage() {
   const [warningSignals, setWarningSignals] = useState(
     initialStored.warningSignals || defaultWarningSignals,
   )
-  const [sessionNotes, setSessionNotes] = useState(initialStored.sessionNotes || '')
+  const [sessionContext, setSessionContext] = useState(
+    initialStored.sessionContext || defaultSessionContext,
+  )
   const [userProfile, setUserProfile] = useState(initialStored.userProfile || defaultUserProfile)
   const [clinicalPreferences, setClinicalPreferences] = useState(
     initialStored.clinicalPreferences || defaultClinicalPreferences,
@@ -180,7 +185,7 @@ function MonitorPage() {
       lastAlertKey,
       sharedSession,
       warningSignals,
-      sessionNotes,
+      sessionContext,
       userProfile,
       clinicalPreferences,
     })
@@ -192,7 +197,7 @@ function MonitorPage() {
     lastAlertKey,
     sharedSession,
     warningSignals,
-    sessionNotes,
+    sessionContext,
     userProfile,
     clinicalPreferences,
   ])
@@ -209,7 +214,7 @@ function MonitorPage() {
         if (cancelled) return
         setSharedSession(null)
         setSyncStatus(
-          'A sessão compartilhada salva neste aparelho não existe mais no banco. Inicie um novo compartilhamento.',
+          'A sess\u00e3o compartilhada salva neste aparelho n\u00e3o existe mais no banco. Inicie um novo compartilhamento.',
         )
       }
     }
@@ -255,31 +260,28 @@ function MonitorPage() {
     [contractions2h],
   )
   const temporalMetrics = useMemo(
-    () => ({
-      metrics1h,
-      metrics2h,
-    }),
+    () => ({ metrics1h, metrics2h }),
     [metrics1h, metrics2h],
   )
   const trendSummary = useMemo(
-    () =>
-      buildTrendSummary({
-        metrics1h,
-        metrics2h,
-      }),
+    () => buildTrendSummary({ metrics1h, metrics2h }),
     [metrics1h, metrics2h],
   )
 
-  const phase = useMemo(
+  const wellbeingSummary = useMemo(() => getWellbeingSummary(recentContractions), [recentContractions])
+  const decision = useMemo(
     () =>
-      getPhaseFromMetrics({
+      getSessionDecision({
         contractions: recentContractions,
         intervals,
         averageDuration,
         averageInterval,
         trendSummary,
+        warningSignals,
+        sessionContext,
         userProfile,
         clinicalPreferences,
+        wellbeingSummary,
       }),
     [
       recentContractions,
@@ -287,25 +289,15 @@ function MonitorPage() {
       averageDuration,
       averageInterval,
       trendSummary,
+      warningSignals,
+      sessionContext,
       userProfile,
       clinicalPreferences,
+      wellbeingSummary,
     ],
   )
-
-  const recommendation = useMemo(
-    () =>
-      getRecommendationFromPhase(phase.key, {
-        trendSummary,
-        userProfile,
-        clinicalPreferences,
-      }),
-    [phase.key, trendSummary, userProfile, clinicalPreferences],
-  )
-  const wellbeingSummary = useMemo(() => getWellbeingSummary(recentContractions), [recentContractions])
-  const warningAssessment = useMemo(
-    () => getWarningSignalAssessment(warningSignals),
-    [warningSignals],
-  )
+  const { pattern, warningSignal, actionPlan, decision: decisionMeta } = decision
+  const screenUrgency = decisionMeta.urgency
   const hasActiveWarningSignals = useMemo(
     () => Object.values(warningSignals).some(Boolean),
     [warningSignals],
@@ -321,33 +313,33 @@ function MonitorPage() {
   }, [lastAlertKey])
 
   useEffect(() => {
-    const nextAlertKey = warningAssessment.alertKey || phase.alertKey
+    const nextAlertKey = warningSignal.alertKey || pattern.alertKey
     const nextAlertMessage =
-      warningAssessment.alertKey && warningAssessment.level !== 'calm'
-        ? warningAssessment.message
-        : recommendation.alertMessage
+      warningSignal.alertKey && warningSignal.level !== 'calm'
+        ? warningSignal.message
+        : actionPlan.alertMessage
     const nextUrgency =
-      warningAssessment.level === 'critical'
+      warningSignal.level === 'critical'
         ? 'critical'
-        : warningAssessment.level === 'warning'
+        : warningSignal.level === 'warning'
           ? 'warning'
-          : phase.urgency
+          : pattern.urgency
 
     if (!alertsEnabled || !nextAlertKey) return
     if (alertStateRef.current === nextAlertKey) return
 
-    triggerBrowserNotification('Monitor de Contrações', nextAlertMessage)
+    triggerBrowserNotification('Monitor de Contra\u00e7\u00f5es', nextAlertMessage)
     triggerVoiceAlert(nextAlertMessage)
     triggerSoundAlert(nextUrgency)
     setLastAlertKey(nextAlertKey)
   }, [
     alertsEnabled,
-    warningAssessment.alertKey,
-    warningAssessment.level,
-    warningAssessment.message,
-    phase.alertKey,
-    phase.urgency,
-    recommendation.alertMessage,
+    warningSignal.alertKey,
+    warningSignal.level,
+    warningSignal.message,
+    pattern.alertKey,
+    pattern.urgency,
+    actionPlan.alertMessage,
   ])
 
   const handleStartContraction = () => {
@@ -379,7 +371,7 @@ function MonitorPage() {
     const choice = await installPromptEvent.userChoice
 
     if (choice.outcome === 'accepted') {
-      setInstallFeedback('Instalação iniciada. Confirme no sistema se necessário.')
+      setInstallFeedback('Instala\u00e7\u00e3o iniciada. Confirme no sistema se necess\u00e1rio.')
     }
 
     setInstallPromptEvent(null)
@@ -388,8 +380,8 @@ function MonitorPage() {
   const handleResetData = async () => {
     const confirmed = window.confirm(
       sharedSession
-        ? 'Tem certeza que deseja resetar todos os dados salvos? Essa ação apaga o histórico, a contração em andamento, os alertas e também remove a sessão compartilhada no banco.'
-        : 'Tem certeza que deseja resetar todos os dados salvos? Essa ação apaga o histórico, a contração em andamento e os alertas.',
+        ? 'Tem certeza que deseja resetar todos os dados salvos? Essa a\u00e7\u00e3o apaga o hist\u00f3rico, a contra\u00e7\u00e3o em andamento, os alertas e tamb\u00e9m remove a sess\u00e3o compartilhada no banco.'
+        : 'Tem certeza que deseja resetar todos os dados salvos? Essa a\u00e7\u00e3o apaga o hist\u00f3rico, a contra\u00e7\u00e3o em andamento e os alertas.',
     )
 
     if (!confirmed) return
@@ -399,7 +391,7 @@ function MonitorPage() {
         await resetSharedSessionData(sharedSession)
       } catch {
         window.alert(
-          'Não foi possível apagar os dados compartilhados no banco agora. Seus dados locais foram mantidos para evitar inconsistência. Tente novamente com internet ativa.',
+          'N\u00e3o foi poss\u00edvel apagar os dados compartilhados no banco agora. Seus dados locais foram mantidos para evitar inconsist\u00eancia. Tente novamente com internet ativa.',
         )
         return
       }
@@ -413,7 +405,7 @@ function MonitorPage() {
     setLastAlertKey('')
     setSharedSession(null)
     setWarningSignals(defaultWarningSignals)
-    setSessionNotes('')
+    setSessionContext(defaultSessionContext)
     setUserProfile(defaultUserProfile)
     setClinicalPreferences(defaultClinicalPreferences)
     setSyncStatus(sharedSession ? 'Dados locais e compartilhados apagados.' : '')
@@ -440,6 +432,13 @@ function MonitorPage() {
     }))
   }
 
+  const handleSessionContextChange = (key, value) => {
+    setSessionContext((current) => ({
+      ...current,
+      [key]: value,
+    }))
+  }
+
   const handleStartSharing = async () => {
     try {
       const createdSession = await createSharedSession({ doulaPhone })
@@ -450,7 +449,7 @@ function MonitorPage() {
 
       try {
         await syncSessionContext(nextSharedSession, {
-          sessionNotes,
+          sessionContext,
           userProfile,
           clinicalPreferences,
         })
@@ -461,13 +460,11 @@ function MonitorPage() {
         throw new Error('initial_sync_failed')
       }
 
-      setSharedSession({
-        ...nextSharedSession,
-      })
-      setSyncStatus('Sessão criada e sincronizada com a doula.')
+      setSharedSession({ ...nextSharedSession })
+      setSyncStatus('Sess\u00e3o criada e sincronizada com a doula.')
     } catch {
       setSharedSession(null)
-      setSyncStatus('Não foi possível iniciar o compartilhamento no banco agora.')
+      setSyncStatus('N\u00e3o foi poss\u00edvel iniciar o compartilhamento no banco agora.')
     }
   }
 
@@ -477,7 +474,7 @@ function MonitorPage() {
       await navigator.clipboard.writeText(sharedSession.shareUrl)
       setSyncStatus('Link da doula copiado.')
     } catch {
-      setSyncStatus('Não foi possível copiar o link automaticamente.')
+      setSyncStatus('N\u00e3o foi poss\u00edvel copiar o link automaticamente.')
     }
   }
 
@@ -488,7 +485,7 @@ function MonitorPage() {
       setSharedSession(null)
       setSyncStatus('Compartilhamento encerrado.')
     } catch {
-      setSyncStatus('Não foi possível encerrar o compartilhamento agora.')
+      setSyncStatus('N\u00e3o foi poss\u00edvel encerrar o compartilhamento agora.')
     }
   }
 
@@ -501,10 +498,10 @@ function MonitorPage() {
         setSyncStatus((current) =>
           current && current.includes('Link da doula copiado')
             ? current
-            : 'Contrações sincronizadas com a doula.',
+            : 'Contra\u00e7\u00f5es sincronizadas com a doula.',
         )
       } catch {
-        setSyncStatus('Falha ao sincronizar contrações.')
+        setSyncStatus('Falha ao sincronizar contra\u00e7\u00f5es.')
       }
     }
 
@@ -534,19 +531,19 @@ function MonitorPage() {
     async function runSync() {
       try {
         await syncSessionContext(sharedSession, {
-          sessionNotes,
+          sessionContext,
           userProfile,
           clinicalPreferences,
         })
       } catch {
         setSyncStatus((current) =>
-          current && current.includes('Falha') ? current : 'Falha ao sincronizar contexto da sessão.',
+          current && current.includes('Falha') ? current : 'Falha ao sincronizar contexto da sess\u00e3o.',
         )
       }
     }
 
     runSync()
-  }, [sharedSession, sessionNotes, userProfile, clinicalPreferences])
+  }, [sharedSession, sessionContext, userProfile, clinicalPreferences])
 
   const metrics = {
     totalContractions: contractions.length,
@@ -557,40 +554,19 @@ function MonitorPage() {
     trendSummary,
   }
 
-  const recommendationView = useMemo(() => {
-    if (warningAssessment.level === 'critical' || warningAssessment.level === 'warning') {
-      return {
-        title: warningAssessment.title,
-        message: warningAssessment.message,
-        secondary: 'O alerta vem antes da leitura do ritmo.',
-        alertMessage: warningAssessment.message,
-      }
-    }
+  const decisionViewModel = useMemo(
+    () =>
+      mapDecisionToDecisionCardViewModel({
+        decision,
+        metrics,
+        trendSummary,
+        formatDuration,
+      }),
+    [decision, metrics, trendSummary, formatDuration],
+  )
 
-    if (wellbeingSummary.dominant === 'red') {
-      return {
-        ...recommendation,
-        secondary: 'Muita dor recente. Vale falar com a doula ou equipe agora.',
-      }
-    }
-
-    if (wellbeingSummary.dominant === 'yellow' && phase.key === 'prodomos') {
-      return {
-        ...recommendation,
-        secondary: 'Ainda parece início, mas já pede observação mais próxima.',
-      }
-    }
-
-    return recommendation
-  }, [recommendation, wellbeingSummary, phase.key, warningAssessment])
   const phoneDigits = doulaPhone.replace(/\D/g, '')
   const hasValidDoulaPhone = phoneDigits.length >= 12
-  const screenUrgency =
-    warningAssessment.level === 'critical'
-      ? 'critical'
-      : warningAssessment.level === 'warning'
-        ? 'warning'
-        : phase.urgency
   const activeWarningLabels = useMemo(
     () =>
       Object.entries(warningSignals)
@@ -604,21 +580,19 @@ function MonitorPage() {
     if (!canSendWhatsAppSummary) return ''
 
     const lines = [
-      'Monitor de Contrações',
+      'Monitor de Contra\u00e7\u00f5es',
       '',
-      `Atualização: ${formatWhatsAppTimestamp(Date.now())}`,
-      `Conduta: ${getWhatsAppActionLabel(recommendationView.title)}`,
-      `Fase provável: ${phase.label}`,
+      `Atualiza\u00e7\u00e3o: ${formatWhatsAppTimestamp(Date.now())}`,
+      `Conduta: ${getWhatsAppActionLabel(actionPlan.action)}`,
+      `Leitura do padr\u00e3o: ${pattern.label}`,
       '',
-      `Intervalo médio: ${formatDuration(averageInterval)}`,
-      `Duração média: ${formatDuration(averageDuration)}`,
-      `Tendência: ${trendSummary?.summaryLabel || 'ainda sem padrão claro'}`,
-      `Contrações recentes: ${recentContractions.length}`,
+      `Intervalo m\u00e9dio: ${formatDuration(averageInterval)}`,
+      `Dura\u00e7\u00e3o m\u00e9dia: ${formatDuration(averageDuration)}`,
+      `Tend\u00eancia: ${trendSummary?.summaryLabel || 'ainda sem padr\u00e3o claro'}`,
+      `Contra\u00e7\u00f5es recentes: ${recentContractions.length}`,
       '',
       `Bem-estar: ${wellbeingSummary.label}`,
-      `Alertas: ${
-        activeWarningLabels.length > 0 ? activeWarningLabels.join(', ') : 'nenhum marcado'
-      }`,
+      `Alertas: ${activeWarningLabels.length > 0 ? activeWarningLabels.join(', ') : 'nenhum marcado'}`,
     ]
 
     if (hasShareLink) {
@@ -633,9 +607,9 @@ function MonitorPage() {
     canSendWhatsAppSummary,
     formatDuration,
     hasShareLink,
-    phase.label,
+    pattern.label,
     recentContractions.length,
-    recommendationView.title,
+    actionPlan.action,
     sharedSession?.shareUrl,
     trendSummary,
     wellbeingSummary.label,
@@ -643,58 +617,49 @@ function MonitorPage() {
   const whatsAppUrl =
     hasValidDoulaPhone && whatsAppMessage ? `https://wa.me/${phoneDigits}?text=${whatsAppMessage}` : ''
   const whatsAppHint = !phoneDigits
-    ? 'Informe o número com DDI para habilitar o envio.'
+    ? 'Informe o n\u00famero com DDI para habilitar o envio.'
     : !hasValidDoulaPhone
-      ? 'Revise o número com DDI. Ele precisa estar completo para habilitar o envio.'
-    : !canSendWhatsAppSummary
-      ? 'Registre ao menos 1 contração para enviar um resumo útil.'
-      : hasShareLink
-        ? 'O resumo incluirá a leitura atual e o link da sessão ao vivo.'
-        : 'O resumo incluirá a leitura atual da sessão.'
+      ? 'Revise o n\u00famero com DDI. Ele precisa estar completo para habilitar o envio.'
+      : !canSendWhatsAppSummary
+        ? 'Registre ao menos 1 contra\u00e7\u00e3o para enviar um resumo \u00fatil.'
+        : hasShareLink
+          ? 'O resumo incluir\u00e1 a leitura atual e o link da sess\u00e3o ao vivo.'
+          : 'O resumo incluir\u00e1 a leitura atual da sess\u00e3o.'
 
   return (
     <div className={`app-shell app-shell-${screenUrgency}`}>
       <header className="hero">
         <div>
-          <p className="eyebrow">Trabalho de parto</p>
-          <h1>Monitor de Contrações</h1>
+          <p className="eyebrow">{'Trabalho de parto'}</p>
+          <h1>{'Monitor de Contra\u00e7\u00f5es'}</h1>
           <p className="hero-copy">
-            Registre as contrações, acompanhe a evolução e receba alertas práticos sem perder o foco.
+            {'Registre as contra\u00e7\u00f5es, acompanhe a evolu\u00e7\u00e3o e receba alertas pr\u00e1ticos sem perder o foco.'}
           </p>
           <div className="top-actions">
             <button className="button button-manual" onClick={() => setManualOpen(true)}>
-              Como usar
+              {'Como usar'}
             </button>
             {installPromptEvent ? (
               <button className="button button-install" onClick={handleInstallApp}>
-                Instalar app
+                {'Instalar app'}
               </button>
             ) : null}
             <button className="button button-top-alert" onClick={handleToggleAlerts}>
-              {alertsEnabled ? 'Alertas automáticos: ligados' : 'Alertas automáticos: desligados'}
+              {alertsEnabled ? 'Alertas autom\u00e1ticos: ligados' : 'Alertas autom\u00e1ticos: desligados'}
             </button>
             <button className="button button-reset" onClick={handleResetData}>
-              Resetar dados
+              {'Resetar dados'}
             </button>
           </div>
           <p className="top-actions-help">
-            Ative os alertas para receber notificação, voz e som quando a fase mudar ou houver um
-            sinal importante.
+            {'Ative os alertas para receber notifica\u00e7\u00e3o, voz e som quando a leitura mudar ou houver um sinal importante.'}
           </p>
           {installFeedback ? <p className="top-actions-help">{installFeedback}</p> : null}
         </div>
       </header>
 
       <main className="content-grid">
-        <DecisionCard
-          phase={phase}
-          recommendation={recommendationView}
-          warningAssessment={warningAssessment}
-          urgency={screenUrgency}
-          trendSummary={trendSummary}
-          metrics={metrics}
-          formatDuration={formatDuration}
-        />
+        <DecisionCard viewModel={decisionViewModel} />
         <CurrentContractionCard
           activeContraction={activeContraction}
           currentDuration={currentDuration}
@@ -707,20 +672,20 @@ function MonitorPage() {
         <WarningSignalsCard
           signals={warningSignals}
           onToggleSignal={handleToggleSignal}
-          assessment={warningAssessment}
+          assessment={warningSignal}
           open={
             warningSignalsOpen ||
-            warningAssessment.level === 'critical' ||
-            warningAssessment.level === 'warning' ||
+            warningSignal.level === 'critical' ||
+            warningSignal.level === 'warning' ||
             hasActiveWarningSignals
           }
           onToggleOpen={() => setWarningSignalsOpen((current) => !current)}
         />
         <MetricsCard metrics={metrics} formatDuration={formatDuration} />
         <CollapsibleSection
-          title="Leitura temporal"
-          description="Visualização detalhada da evolução recente e da sequência de registros."
-          badge="Contexto"
+          title={'Leitura temporal'}
+          description={'Visualiza\u00e7\u00e3o detalhada da evolu\u00e7\u00e3o recente e da sequ\u00eancia de registros.'}
+          badge={'Contexto'}
           open={timelineOpen}
           onToggle={() => setTimelineOpen((current) => !current)}
           countLabel="timeline"
@@ -742,24 +707,33 @@ function MonitorPage() {
           onToggleOpen={() => setHistoryOpen((current) => !current)}
         />
         <CollapsibleSection
-          title="Contexto da sessão"
-          description="Observações, perfil e preferências que ajudam a interpretar melhor a evolução."
-          badge="Fechado por padrão"
+          title={'Contexto da sess\u00e3o'}
+          description={'Observa\u00e7\u00f5es, perfil e prefer\u00eancias que ajudam a interpretar melhor a evolu\u00e7\u00e3o.'}
+          badge={'Fechado por padr\u00e3o'}
           open={sessionContextOpen}
           onToggle={() => setSessionContextOpen((current) => !current)}
           countLabel="contexto"
         >
-          <SessionNotesCard sessionNotes={sessionNotes} onChangeNotes={setSessionNotes} />
-          <UserProfileCard userProfile={userProfile} onChangeProfile={handleProfileChange} />
-          <ClinicalPreferencesCard
+          <SessionContextSummaryCard
+            sessionContext={sessionContext}
+            userProfile={userProfile}
+            clinicalPreferences={clinicalPreferences}
+            mode="monitor"
+          />
+          <SessionContextFormCard
+            sessionContext={sessionContext}
+            onChangeContext={handleSessionContextChange}
+          />
+          <UserProfileCardV2 userProfile={userProfile} onChangeProfile={handleProfileChange} />
+          <ClinicalPreferencesCardV2
             clinicalPreferences={clinicalPreferences}
             onChangePreference={handlePreferenceChange}
           />
         </CollapsibleSection>
         <CollapsibleSection
-          title="Compartilhamento e apoio"
-          description="Ferramentas operacionais para compartilhar a sessão e acionar contato rápido."
-          badge="Operacional"
+          title={'Compartilhamento e apoio'}
+          description={'Ferramentas operacionais para compartilhar a sess\u00e3o e acionar contato r\u00e1pido.'}
+          badge={'Operacional'}
           open={sharingToolsOpen}
           onToggle={() => setSharingToolsOpen((current) => !current)}
           countLabel="ferramentas"
@@ -781,9 +755,9 @@ function MonitorPage() {
           />
         </CollapsibleSection>
         <CollapsibleSection
-          title="Orientações práticas"
-          description="Resumo rápido de condutas de apoio que não substitui avaliação profissional."
-          badge="Apoio"
+          title={'Orienta\u00e7\u00f5es pr\u00e1ticas'}
+          description={'Resumo r\u00e1pido de condutas de apoio que n\u00e3o substitui avalia\u00e7\u00e3o profissional.'}
+          badge={'Apoio'}
           open={guidanceOpen}
           onToggle={() => setGuidanceOpen((current) => !current)}
         >
@@ -792,7 +766,7 @@ function MonitorPage() {
       </main>
 
       <footer className="footer-note">
-        Este app é apenas um apoio de monitoramento e não substitui orientação médica.
+        {'Este app e\u0301 apenas um apoio de monitoramento e n\u00e3o substitui orienta\u00e7\u00e3o m\u00e9dica.'}
       </footer>
 
       <ManualModal open={manualOpen} onClose={() => setManualOpen(false)} />
@@ -817,4 +791,3 @@ function App() {
 }
 
 export default App
-

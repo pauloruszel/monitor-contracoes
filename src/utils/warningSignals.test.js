@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest'
+import { WARNING_SIGNAL_COPY } from '../content/clinicalCopy'
 import { getWarningSignalAssessment } from './warningSignals'
 
 describe('warningSignals', () => {
   it('retorna estado calmo quando nenhum sinal foi marcado', () => {
     expect(getWarningSignalAssessment({})).toEqual({
       level: 'calm',
-      title: 'Sem alerta adicional',
-      message: 'Nenhum sinal de alerta adicional foi marcado até agora.',
+      title: WARNING_SIGNAL_COPY.calm.title,
+      message: WARNING_SIGNAL_COPY.calm.message,
       alertKey: '',
     })
   })
@@ -14,9 +15,8 @@ describe('warningSignals', () => {
   it('trata perda isolada do tampao como observacao', () => {
     expect(getWarningSignalAssessment({ mucusPlug: true })).toEqual({
       level: 'attention',
-      title: 'Observar',
-      message:
-        'Perda do tampão isoladamente pode acontecer antes do trabalho de parto e não exige ida imediata ao hospital.',
+      title: WARNING_SIGNAL_COPY.mucusPlug.title,
+      message: WARNING_SIGNAL_COPY.mucusPlug.message,
       alertKey: '',
     })
   })
@@ -24,9 +24,8 @@ describe('warningSignals', () => {
   it('trata tampao antes de 37 semanas como alerta de aviso', () => {
     expect(getWarningSignalAssessment({ mucusPlug: true, preterm: true })).toEqual({
       level: 'warning',
-      title: 'Avisar a equipe',
-      message:
-        'Perda do tampão antes de 37 semanas merece avaliação. Falem com a equipe ou maternidade.',
+      title: WARNING_SIGNAL_COPY.mucusPreterm.title,
+      message: WARNING_SIGNAL_COPY.mucusPreterm.message,
       alertKey: 'warning-signal-mucus-preterm',
     })
   })
@@ -34,9 +33,8 @@ describe('warningSignals', () => {
   it('trata bolsa rota isolada como contato imediato com a maternidade', () => {
     expect(getWarningSignalAssessment({ watersBroken: true })).toEqual({
       level: 'warning',
-      title: 'Entrar em contato com a maternidade',
-      message:
-        'A bolsa pode ter rompido. Entrem em contato com a maternidade ou com a equipe para orientação agora.',
+      title: WARNING_SIGNAL_COPY.watersBroken.title,
+      message: WARNING_SIGNAL_COPY.watersBroken.message,
       alertKey: 'warning-signal-waters',
     })
   })
@@ -51,9 +49,8 @@ describe('warningSignals', () => {
     ]) {
       expect(getWarningSignalAssessment(signals)).toEqual({
         level: 'critical',
-        title: 'Ir ao hospital / procurar atendimento',
-        message:
-          'Há um sinal de alerta importante. Procurem atendimento imediatamente ou falem com a equipe agora.',
+        title: WARNING_SIGNAL_COPY.critical.title,
+        message: WARNING_SIGNAL_COPY.critical.message,
         alertKey: 'warning-signal-critical',
       })
     }

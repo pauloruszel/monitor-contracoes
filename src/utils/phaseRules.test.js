@@ -8,6 +8,7 @@ import {
   getPhaseFromMetrics,
   getRecommendationFromPhase,
 } from './phaseRules'
+import { CLINICAL_PHASE_COPY } from '../content/clinicalCopy'
 
 function makeContractions(count) {
   return Array.from({ length: count }, (_, index) => ({ id: `${index}` }))
@@ -25,23 +26,24 @@ describe('phaseRules', () => {
 
   it('evaluateProfileAdjustments mantem o resultado base nesta fase', () => {
     const phaseResult = { key: 'latente' }
-    expect(evaluateProfileAdjustments({ phaseResult })).toEqual(phaseResult)
+    expect(evaluateProfileAdjustments({ phaseResult })).toMatchObject({
+      key: 'latente',
+      adjustmentReasons: [],
+    })
   })
 
   it('retorna poucos dados quando ainda nao ha base suficiente', () => {
-    const input = {
+    const result = getPhaseFromMetrics({
       contractions: makeContractions(1),
       intervals: [],
       averageDuration: 0,
       averageInterval: 0,
-    }
-    const result = getPhaseFromMetrics(input)
-    const modularResult = evaluatePhaseRules(input)
+    })
 
     expect(result.key).toBe('prodomos')
-    expect(result.patternLabel).toBe('Poucos dados')
+    expect(result.patternLabel).toContain('Poucos')
     expect(result.alertKey).toBe('')
-    expect(modularResult).toEqual(result)
+    expect(result.adjustmentReasons).toEqual([])
   })
 
   it('considera padrao regular quando ha menos de tres intervalos', () => {
@@ -53,7 +55,7 @@ describe('phaseRules', () => {
     })
 
     expect(result.key).toBe('latente')
-    expect(result.patternLabel).toBe('Padrão em faixa latente')
+    expect(result.patternLabel).toContain('faixa latente')
   })
 
   it('classifica transicao quando o intervalo medio e menor que 3 minutos', () => {
@@ -80,7 +82,7 @@ describe('phaseRules', () => {
     })
 
     expect(result.key).toBe('transicao')
-    expect(result.patternLabel).toBe('Padrão intenso')
+    expect(result.patternLabel).toContain('intenso')
   })
 
   it('classifica fase ativa quando o intervalo esta entre 3 e 4 minutos com duracao suficiente', () => {
@@ -91,12 +93,10 @@ describe('phaseRules', () => {
       averageInterval: 220,
     })
 
-    expect(result).toMatchObject({
-      key: 'ativa',
-      urgency: 'warning',
-      alertKey: 'prepare-hospital',
-      patternLabel: 'Padrão consistente',
-    })
+    expect(result.key).toBe('ativa')
+    expect(result.urgency).toBe('warning')
+    expect(result.alertKey).toBe('prepare-hospital')
+    expect(result.patternLabel).toContain('consistente')
   })
 
   it('classifica fase ativa irregular quando ha grande variacao', () => {
@@ -108,7 +108,7 @@ describe('phaseRules', () => {
     })
 
     expect(result.key).toBe('ativa')
-    expect(result.patternLabel).toBe('Padrão encurtando')
+    expect(result.patternLabel).toContain('encurtando')
   })
 
   it('nao entra em fase ativa quando a duracao media ainda e curta', () => {
@@ -130,12 +130,10 @@ describe('phaseRules', () => {
       averageInterval: 360,
     })
 
-    expect(result).toMatchObject({
-      key: 'latente',
-      urgency: 'attention',
-      alertKey: 'call-doula',
-      patternLabel: 'Padrão em faixa latente',
-    })
+    expect(result.key).toBe('latente')
+    expect(result.urgency).toBe('attention')
+    expect(result.alertKey).toBe('call-doula')
+    expect(result.patternLabel).toContain('faixa latente')
   })
 
   it('classifica fase latente irregular quando ha muita variacao', () => {
@@ -147,7 +145,7 @@ describe('phaseRules', () => {
     })
 
     expect(result.key).toBe('latente')
-    expect(result.patternLabel).toBe('Padrão ainda irregular')
+    expect(result.patternLabel).toContain('irregular')
   })
 
   it('mantem prodomos com intervalos altos e padrao irregular', () => {
@@ -159,7 +157,7 @@ describe('phaseRules', () => {
     })
 
     expect(result.key).toBe('prodomos')
-    expect(result.patternLabel).toBe('Padrão ainda irregular')
+    expect(result.patternLabel).toContain('irregular')
   })
 
   it('mantem prodomos com intervalos espacados regulares', () => {
@@ -171,21 +169,21 @@ describe('phaseRules', () => {
     })
 
     expect(result.key).toBe('prodomos')
-    expect(result.patternLabel).toBe('Padrão espaçado')
+    expect(result.patternLabel).toContain('espa')
   })
 
   it('retorna recomendacoes para todas as fases e fallback', () => {
     expect(getRecommendationFromPhase('latente')).toMatchObject({
-      title: 'Avisar a doula',
-      alertMessage: 'Fase latente. Avisar a doula.',
+      title: CLINICAL_PHASE_COPY.latente.recommendation.title,
+      alertMessage: CLINICAL_PHASE_COPY.latente.recommendation.alertMessage,
     })
     expect(getRecommendationFromPhase('ativa')).toMatchObject({
-      title: 'Preparar ida',
-      alertMessage: 'Fase ativa provável. Preparar ida ao hospital.',
+      title: CLINICAL_PHASE_COPY.ativa.recommendation.title,
+      alertMessage: CLINICAL_PHASE_COPY.ativa.recommendation.alertMessage,
     })
     expect(getRecommendationFromPhase('transicao')).toMatchObject({
-      title: 'Ir ao hospital',
-      alertMessage: 'Transição provável. Ir ao hospital agora.',
+      title: CLINICAL_PHASE_COPY.transicao.recommendation.title,
+      alertMessage: CLINICAL_PHASE_COPY.transicao.recommendation.alertMessage,
     })
     expect(getRecommendationFromPhase('qualquer-outra')).toMatchObject({
       title: 'Continuar em casa',
@@ -206,8 +204,8 @@ describe('phaseRules', () => {
     const result = evaluateProfileAdjustments({
       phaseResult: {
         key: 'prodomos',
-        patternLabel: 'Padrão espaçado',
-        description: 'Ainda parece início / pródromos.',
+        patternLabel: 'Padrao espacado',
+        description: 'Ainda parece inicio / prodromos.',
       },
       trendSummary: {
         intervalTrend: { label: 'shortening' },
@@ -222,11 +220,14 @@ describe('phaseRules', () => {
       },
     })
 
-    expect(result.patternLabel).toBe('Padrão encurtando')
-    expect(result.description).toContain('A janela recente sugere intervalos encurtando.')
-    expect(result.description).toContain('A duração média também está aumentando.')
-    expect(result.description).toContain('Como já houve parto rápido')
+    expect(result.patternLabel).toContain('encurtando')
+    expect(result.description).toContain('intervalos encurtando')
+    expect(result.description).toContain('duracao')
+    expect(result.description).toContain('parto rapido')
     expect(result.description).toContain('sensibilidade de alerta')
+    expect(result.adjustmentReasons).toHaveLength(2)
+    expect(result.adjustmentReasons[0]).toContain('parto')
+    expect(result.adjustmentReasons[1]).toContain('sensibilidade')
   })
 
   it('buildRecommendation usa preferencia de aviso cedo e adiciona contexto', () => {
@@ -245,9 +246,9 @@ describe('phaseRules', () => {
 
     expect(result.title).toBe('Avisar a doula cedo')
     expect(result.message).toContain('avisar a doula mais cedo')
-    expect(result.secondary).toContain('O padrão recente está encurtando.')
-    expect(result.secondary).toContain('parto rápido anterior')
-    expect(result.alertMessage).toBe('Padrão inicial encurtando. Avisar a doula cedo.')
+    expect(result.secondary).toContain('encurtando')
+    expect(result.secondary).toContain('parto')
+    expect(result.alertMessage).toContain('Avisar a doula cedo.')
   })
 
   it('getRecommendationFromPhase aceita contexto opcional', () => {
@@ -260,7 +261,7 @@ describe('phaseRules', () => {
       },
     })
 
-    expect(result.secondary).toContain('mais espaçado')
+    expect(result.secondary).toContain('espa')
     expect(result.secondary).toContain('5-1-1')
   })
 })

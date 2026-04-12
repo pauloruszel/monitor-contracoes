@@ -22,6 +22,13 @@ export const defaultClinicalPreferences = {
   notifyDoulaEarly: false,
 }
 
+export const defaultSessionContext = {
+  homeObservationGuidance: false,
+  longTravelToHospital: false,
+  bagReady: false,
+  notes: '',
+}
+
 function getDefaultStorageState() {
   return {
     contractions: [],
@@ -31,7 +38,7 @@ function getDefaultStorageState() {
     lastAlertKey: '',
     sharedSession: null,
     warningSignals: defaultWarningSignals,
-    sessionNotes: '',
+    sessionContext: defaultSessionContext,
     userProfile: defaultUserProfile,
     clinicalPreferences: defaultClinicalPreferences,
   }
@@ -56,6 +63,11 @@ export function loadFromStorage() {
       warningSignals: {
         ...defaultWarningSignals,
         ...(parsed.warningSignals || {}),
+      },
+      sessionContext: {
+        ...defaultSessionContext,
+        notes: parsed.sessionContext?.notes ?? parsed.sessionNotes ?? defaultSessionContext.notes,
+        ...(parsed.sessionContext || {}),
       },
       userProfile: {
         ...defaultUserProfile,

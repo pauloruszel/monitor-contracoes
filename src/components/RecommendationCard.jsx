@@ -8,7 +8,7 @@ function RecommendationCard({ phase, recommendation, urgency, wellbeingSummary }
       <div className="card-header">
         <div>
           <h2>Agora</h2>
-          <p className="inline-phase-label">Fase provável</p>
+          <p className="inline-phase-label">Leitura do padrão</p>
           <h3 className="now-phase-title">{phase.label}</h3>
         </div>
         <span className={`badge badge-${urgency}`}>{recommendation.title}</span>

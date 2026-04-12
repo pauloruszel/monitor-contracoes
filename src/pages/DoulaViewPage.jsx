@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import DecisionCard from '../components/DecisionCard'
 import CollapsibleSection from '../components/CollapsibleSection'
 import MetricsCard from '../components/MetricsCard'
+import SessionContextSummaryCard from '../components/SessionContextSummaryCard'
 import TimelineChart from '../components/TimelineChart'
 import WarningSignalsCard from '../components/WarningSignalsCard'
 import HistoryList from '../components/HistoryList'
@@ -18,8 +19,8 @@ import {
   getLastItems,
   normalizeContractions,
 } from '../utils/contractionUtils'
-import { getPhaseFromMetrics, getRecommendationFromPhase } from '../utils/phaseRules'
-import { getWarningSignalAssessment } from '../utils/warningSignals'
+import { getSessionDecision } from '../engine/decisionEngine'
+import { mapDecisionToDecisionCardViewModel } from '../adapters/decisionViewModel'
 import { getSessionByShareToken, subscribeToSession } from '../services/firebaseSharingService'
 
 const ANALYSIS_WINDOW = 5
@@ -37,14 +38,15 @@ const defaultSignals = {
 
 function mapWarningSignalsRow(row) {
   if (!row) return defaultSignals
+
   return {
-    mucusPlug: row.mucusPlug,
-    watersBroken: row.watersBroken,
-    meconium: row.meconium,
-    reducedMovement: row.reducedMovement,
-    bleeding: row.bleeding,
-    badSmellOrFever: row.badSmellOrFever,
-    preterm: row.preterm,
+    mucusPlug: Boolean(row.mucusPlug),
+    watersBroken: Boolean(row.watersBroken),
+    meconium: Boolean(row.meconium),
+    reducedMovement: Boolean(row.reducedMovement),
+    bleeding: Boolean(row.bleeding),
+    badSmellOrFever: Boolean(row.badSmellOrFever),
+    preterm: Boolean(row.preterm),
   }
 }
 
@@ -64,7 +66,7 @@ function getSyncStatusView({ isOnline, realtimeConnected, lastSuccessAt }) {
   if (!isOnline) {
     return {
       tone: 'warning',
-      label: 'Sem conexão',
+      label: 'Sem conex\u00e3o',
       description: 'O celular ficou offline. Os dados podem parar de atualizar.',
     }
   }
@@ -73,7 +75,7 @@ function getSyncStatusView({ isOnline, realtimeConnected, lastSuccessAt }) {
     return {
       tone: 'warning',
       label: 'Pode estar desatualizado',
-      description: 'Faz algum tempo que nada atualiza. Vale conferir a conexão.',
+      description: 'Faz algum tempo que nada atualiza. Vale conferir a conex\u00e3o.',
     }
   }
 
@@ -81,14 +83,14 @@ function getSyncStatusView({ isOnline, realtimeConnected, lastSuccessAt }) {
     return {
       tone: 'calm',
       label: 'Ao vivo',
-      description: 'As novas marcações chegam quase na hora.',
+      description: 'As novas marca\u00e7\u00f5es chegam quase na hora.',
     }
   }
 
   return {
     tone: 'attention',
     label: 'Conectando',
-    description: 'Tentando retomar a atualização da sessão.',
+    description: 'Tentando retomar a atualiza\u00e7\u00e3o da sess\u00e3o.',
   }
 }
 
@@ -132,8 +134,8 @@ function DoulaViewPage({ shareToken }) {
 
     function applySessionSnapshot(nextSession) {
       setSession(nextSession)
-      setContractions(mapContractions(Object.values(nextSession?.contractions || {})))
-      setWarningSignals(mapWarningSignalsRow(nextSession?.warningSignals))
+      setContractions(mapContractions(Object.values(nextSession.contractions || {})))
+      setWarningSignals(mapWarningSignalsRow(nextSession.warningSignals))
       setLastSuccessAt(Date.now())
     }
 
@@ -142,7 +144,6 @@ function DoulaViewPage({ shareToken }) {
         setLoading(true)
         const foundSession = await getSessionByShareToken(shareToken)
         applySessionSnapshot(foundSession)
-        setLastSuccessAt(Date.now())
         setError('')
         setRealtimeConnected(true)
 
@@ -153,7 +154,7 @@ function DoulaViewPage({ shareToken }) {
         })
       } catch {
         setRealtimeConnected(false)
-        setError('Não foi possível carregar esta sessão compartilhada.')
+        setError('N\u00e3o foi poss\u00edvel carregar esta sess\u00e3o compartilhada.')
       } finally {
         setLoading(false)
       }
@@ -207,31 +208,39 @@ function DoulaViewPage({ shareToken }) {
       }),
     [metrics1h, metrics2h],
   )
-  const phase = useMemo(
+
+  const sessionContext = session?.sessionContext || {}
+  const userProfile = session?.userProfile || {}
+  const clinicalPreferences = session?.clinicalPreferences || {}
+
+  const decision = useMemo(
     () =>
-      getPhaseFromMetrics({
+      getSessionDecision({
         contractions: recentContractions,
         intervals,
         averageDuration,
         averageInterval,
         trendSummary,
+        warningSignals,
+        sessionContext,
+        userProfile,
+        clinicalPreferences,
       }),
-    [recentContractions, intervals, averageDuration, averageInterval, trendSummary],
+    [
+      recentContractions,
+      intervals,
+      averageDuration,
+      averageInterval,
+      trendSummary,
+      warningSignals,
+      sessionContext,
+      userProfile,
+      clinicalPreferences,
+    ],
   )
-  const warningAssessment = useMemo(
-    () => getWarningSignalAssessment(warningSignals),
-    [warningSignals],
-  )
-  const recommendation = useMemo(() => {
-    if (warningAssessment.level === 'critical' || warningAssessment.level === 'warning') {
-      return {
-        title: warningAssessment.title,
-        message: warningAssessment.message,
-        secondary: 'O alerta vem antes da leitura do ritmo.',
-      }
-    }
-    return getRecommendationFromPhase(phase.key, { trendSummary })
-  }, [phase.key, warningAssessment, trendSummary])
+
+  const { warningSignal, decision: decisionMeta } = decision
+  const screenUrgency = decisionMeta.urgency
 
   const syncStatus = useMemo(
     () =>
@@ -239,9 +248,32 @@ function DoulaViewPage({ shareToken }) {
         isOnline,
         realtimeConnected,
         lastSuccessAt,
-        statusTick,
       }),
     [isOnline, realtimeConnected, lastSuccessAt, statusTick],
+  )
+
+  const metrics = useMemo(
+    () => ({
+      totalContractions: contractions.length,
+      averageDuration,
+      averageInterval,
+      lastDuration:
+        contractions.length > 0 ? contractions[contractions.length - 1].durationSeconds : null,
+      lastInterval: intervals.length > 0 ? intervals[intervals.length - 1] : null,
+      trendSummary,
+    }),
+    [contractions, averageDuration, averageInterval, intervals, trendSummary],
+  )
+
+  const decisionViewModel = useMemo(
+    () =>
+      mapDecisionToDecisionCardViewModel({
+        decision,
+        metrics,
+        trendSummary,
+        formatDuration,
+      }),
+    [decision, metrics, trendSummary],
   )
 
   if (loading) {
@@ -260,31 +292,18 @@ function DoulaViewPage({ shareToken }) {
     )
   }
 
-  const metrics = {
-    totalContractions: contractions.length,
-    averageDuration,
-    averageInterval,
-    lastDuration: contractions.length ? contractions[contractions.length - 1].durationSeconds : null,
-    lastInterval: intervals.length > 0 ? intervals[intervals.length - 1] : null,
-    trendSummary,
-  }
-  const screenUrgency =
-    warningAssessment.level === 'critical'
-      ? 'critical'
-      : warningAssessment.level === 'warning'
-        ? 'warning'
-        : phase.urgency
-
   return (
     <div className={`app-shell app-shell-${screenUrgency}`}>
       <header className="hero">
         <div>
           <p className="eyebrow">Modo doula</p>
-          <h1>Acompanhamento da sessão</h1>
-          <p className="hero-copy">Visualização somente leitura das marcações do acompanhante.</p>
+          <h1>Acompanhamento da sess\u00e3o</h1>
+          <p className="hero-copy">Visualizacao somente leitura das marcacoes da acompanhante.</p>
           <p className="top-actions-help">
-            Última atualização: {session?.updatedAt ? formatClockTime(session.updatedAt) : '--'}.
-            {session?.status === 'closed' ? ' Sessão encerrada.' : ' Sessão ativa.'}
+            {`\u00daltima atualizacao: ${
+              session?.updatedAt ? formatClockTime(session.updatedAt) : '--'
+            }.`}
+            {session?.status === 'closed' ? ' Sessao encerrada.' : ' Sessao ativa.'}
           </p>
           <div className={`sync-status sync-status-${syncStatus.tone}`}>
             <strong>{syncStatus.label}</strong>
@@ -294,27 +313,25 @@ function DoulaViewPage({ shareToken }) {
       </header>
 
       <main className="content-grid">
-        <DecisionCard
-          phase={phase}
-          recommendation={recommendation}
-          warningAssessment={warningAssessment}
-          urgency={screenUrgency}
-          trendSummary={trendSummary}
-          metrics={metrics}
-          formatDuration={formatDuration}
-        />
+        <DecisionCard viewModel={decisionViewModel} />
         <WarningSignalsCard
           signals={warningSignals}
           onToggleSignal={() => {}}
-          assessment={warningAssessment}
+          assessment={warningSignal}
           open
           onToggleOpen={() => {}}
           readOnly
         />
+        <SessionContextSummaryCard
+          sessionContext={sessionContext}
+          userProfile={userProfile}
+          clinicalPreferences={clinicalPreferences}
+          mode="doula"
+        />
         <MetricsCard metrics={metrics} formatDuration={formatDuration} />
         <CollapsibleSection
           title="Leitura temporal"
-          description="Visualização detalhada da evolução recente para leitura remota."
+          description="Visualizacao detalhada da evolucao recente para leitura remota."
           badge="Contexto"
           open={timelineOpen}
           onToggle={() => setTimelineOpen((current) => !current)}
