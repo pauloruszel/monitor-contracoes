@@ -298,12 +298,12 @@ function DoulaViewPage({ shareToken }) {
         <div>
           <p className="eyebrow">Modo doula</p>
           <h1>Acompanhamento da sess\u00e3o</h1>
-          <p className="hero-copy">Visualizacao somente leitura das marcacoes da acompanhante.</p>
+          <p className="hero-copy">Visualização somente leitura das marcações da acompanhante.</p>
           <p className="top-actions-help">
-            {`\u00daltima atualizacao: ${
+            {`\u00daltima atualização: ${
               session?.updatedAt ? formatClockTime(session.updatedAt) : '--'
             }.`}
-            {session?.status === 'closed' ? ' Sessao encerrada.' : ' Sessao ativa.'}
+            {session?.status === 'closed' ? ' Sessão encerrada.' : ' Sessão ativa.'}
           </p>
           <div className={`sync-status sync-status-${syncStatus.tone}`}>
             <strong>{syncStatus.label}</strong>
@@ -331,7 +331,7 @@ function DoulaViewPage({ shareToken }) {
         <MetricsCard metrics={metrics} formatDuration={formatDuration} />
         <CollapsibleSection
           title="Leitura temporal"
-          description="Visualizacao detalhada da evolucao recente para leitura remota."
+          description="Visualização detalhada da evolução recente para leitura remota."
           badge="Contexto"
           open={timelineOpen}
           onToggle={() => setTimelineOpen((current) => !current)}

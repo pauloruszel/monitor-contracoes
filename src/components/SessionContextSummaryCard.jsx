@@ -39,8 +39,8 @@ function SessionContextSummaryCard({
           <h2>Contexto da sess\u00e3o</h2>
           <p className="support-text compact-text">
             {mode === 'doula'
-              ? 'Resumo do contexto compartilhado para interpretar melhor a evolucao.'
-              : 'So aparecem aqui os itens que podem mudar a leitura ou alinhar o acompanhamento.'}
+              ? 'Resumo do contexto compartilhado para interpretar melhor a evolução.'
+              : 'Só aparecem aqui os itens que podem mudar a leitura ou alinhar o acompanhamento.'}
           </p>
         </div>
         <span className="badge badge-muted">Resumo</span>
@@ -48,7 +48,7 @@ function SessionContextSummaryCard({
 
       {clinicalItems.length > 0 ? (
         <div className="context-block">
-          <p className="context-block-label">Contexto clinico ativo</p>
+          <p className="context-block-label">Contexto clínico ativo</p>
           <div className="context-chip-list">
             {clinicalItems.map((item) => (
               <span key={item} className="context-chip">
