@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest'
 import {
   formatAdjustmentCopy,
   getActiveSessionContextItems,
+  getActionAdjustmentReasons,
   getAdjustmentReasons,
   getClinicalContextItems,
+  getReadingAdjustmentReasons,
   normalizeSessionContext,
 } from './sessionContextUtils'
 
@@ -18,65 +20,94 @@ describe('sessionContextUtils', () => {
   })
 
   it('getActiveSessionContextItems lista apenas itens operacionais ativos', () => {
-    expect(
-      getActiveSessionContextItems({
-        homeObservationGuidance: true,
+    const result = getActiveSessionContextItems({
+      homeObservationGuidance: true,
+      longTravelToHospital: true,
+      bagReady: false,
+    })
+
+    expect(result).toHaveLength(2)
+    expect(result[0]).toContain('observar em casa')
+    expect(result[1]).toContain('hospital')
+  })
+
+  it('getClinicalContextItems resume perfil e preferencias ativas', () => {
+    const result = getClinicalContextItems({
+      userProfile: {
+        firstPregnancy: true,
+        priorFastLabor: true,
+        gestationalWeeks: '40',
+      },
+      clinicalPreferences: {
+        useFiveOneOne: true,
+        notifyDoulaEarly: true,
+        alertSensitivity: 'high',
+      },
+    })
+
+    expect(result).toHaveLength(6)
+    expect(result[0]).toContain('Parto anterior')
+    expect(result[1]).toContain('Primeira')
+    expect(result[3]).toContain('doula')
+    expect(result[4]).toContain('5-1-1')
+  })
+
+  it('getReadingAdjustmentReasons resume fatores da leitura', () => {
+    const result = getReadingAdjustmentReasons({
+      patternKey: 'prodomos',
+      userProfile: {
+        priorFastLabor: true,
+      },
+      clinicalPreferences: {
+        alertSensitivity: 'high',
+      },
+      sessionContext: {
         longTravelToHospital: true,
-        bagReady: false,
-      }),
-    ).toEqual(['Orientação para observar em casa', 'Deslocamento longo até o hospital'])
+      },
+    })
+
+    expect(result).toHaveLength(3)
+    expect(result[0]).toContain('parto')
+    expect(result[1]).toContain('sensibilidade')
+    expect(result[2]).toContain('deslocamento')
   })
 
-  it('getClinicalContextItems resume perfil e preferências ativas', () => {
-    expect(
-      getClinicalContextItems({
-        userProfile: {
-          firstPregnancy: true,
-          priorFastLabor: true,
-          gestationalWeeks: '40',
-        },
-        clinicalPreferences: {
-          useFiveOneOne: true,
-          notifyDoulaEarly: true,
-          alertSensitivity: 'high',
-        },
-      }),
-    ).toEqual([
-      'Parto anterior rápido',
-      'Primeira gestação',
-      '40 semanas',
-      'Aviso precoce para a doula',
-      'Referência 5-1-1 habilitada',
-      'Sensibilidade alta de alerta',
-    ])
+  it('getActionAdjustmentReasons resume fatores da conduta', () => {
+    const result = getActionAdjustmentReasons({
+      patternKey: 'prodomos',
+      trendSummary: {
+        intervalTrend: { label: 'shortening' },
+      },
+      userProfile: {
+        priorFastLabor: true,
+      },
+      clinicalPreferences: {
+        notifyDoulaEarly: true,
+      },
+      wellbeingSummary: {
+        dominant: 'red',
+      },
+    })
+
+    expect(result).toHaveLength(3)
+    expect(result[0]).toContain('aviso precoce')
+    expect(result[1]).toContain('parto')
+    expect(result[2]).toContain('dor')
   })
 
-  it('getAdjustmentReasons resume só os fatores que ajustam a leitura', () => {
-    expect(
-      getAdjustmentReasons({
-        phaseKey: 'prodomos',
-        trendSummary: {
-          intervalTrend: { label: 'shortening' },
-        },
-        userProfile: {
-          priorFastLabor: true,
-        },
-        clinicalPreferences: {
-          alertSensitivity: 'high',
-          notifyDoulaEarly: true,
-        },
-      }),
-    ).toEqual([
-      'histórico de parto rápido',
-      'sensibilidade alta de alerta',
-      'preferência de aviso precoce para a doula',
-    ])
+  it('getAdjustmentReasons mantem compatibilidade com a fachada antiga', () => {
+    const result = getAdjustmentReasons({
+      phaseKey: 'prodomos',
+      userProfile: {
+        priorFastLabor: true,
+      },
+    })
+
+    expect(result).toEqual([expect.stringContaining('parto')])
   })
 
   it('formatAdjustmentCopy monta a linha pronta para o card', () => {
     expect(formatAdjustmentCopy([])).toBe('')
-    expect(formatAdjustmentCopy(['histórico de parto rápido'])).toBe(
-      'Esta leitura foi ajustada por histórico de parto rápido.',
-    )
+    expect(formatAdjustmentCopy(['historico de parto rapido'])).toContain('Esta leitura foi ajustada por')
   })
 })

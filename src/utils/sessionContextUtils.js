@@ -1,3 +1,4 @@
+import { SESSION_CONTEXT_COPY } from '../content/contextCopy'
 import { defaultSessionContext } from './storage'
 
 export function normalizeSessionContext(sessionContext) {
@@ -13,15 +14,15 @@ export function getActiveSessionContextItems(sessionContext) {
   const items = []
 
   if (context.homeObservationGuidance) {
-    items.push('Orientação para observar em casa')
+    items.push(SESSION_CONTEXT_COPY.activeItems.homeObservationGuidance)
   }
 
   if (context.longTravelToHospital) {
-    items.push('Deslocamento longo até o hospital')
+    items.push(SESSION_CONTEXT_COPY.activeItems.longTravelToHospital)
   }
 
   if (context.bagReady) {
-    items.push('Bolsa e documentos já separados')
+    items.push(SESSION_CONTEXT_COPY.activeItems.bagReady)
   }
 
   return items
@@ -31,11 +32,11 @@ export function getClinicalContextItems({ userProfile, clinicalPreferences }) {
   const items = []
 
   if (userProfile?.priorFastLabor) {
-    items.push('Parto anterior rápido')
+    items.push(SESSION_CONTEXT_COPY.clinicalItems.priorFastLabor)
   }
 
   if (userProfile?.firstPregnancy) {
-    items.push('Primeira gestação')
+    items.push(SESSION_CONTEXT_COPY.clinicalItems.firstPregnancy)
   }
 
   if (userProfile?.gestationalWeeks) {
@@ -43,44 +44,84 @@ export function getClinicalContextItems({ userProfile, clinicalPreferences }) {
   }
 
   if (clinicalPreferences?.notifyDoulaEarly) {
-    items.push('Aviso precoce para a doula')
+    items.push(SESSION_CONTEXT_COPY.clinicalItems.notifyDoulaEarly)
   }
 
   if (clinicalPreferences?.useFiveOneOne) {
-    items.push('Referência 5-1-1 habilitada')
+    items.push(SESSION_CONTEXT_COPY.clinicalItems.useFiveOneOne)
   }
 
   if (clinicalPreferences?.alertSensitivity === 'high') {
-    items.push('Sensibilidade alta de alerta')
+    items.push(SESSION_CONTEXT_COPY.clinicalItems.alertSensitivityHigh)
   }
 
   if (clinicalPreferences?.alertSensitivity === 'low') {
-    items.push('Sensibilidade baixa de alerta')
+    items.push(SESSION_CONTEXT_COPY.clinicalItems.alertSensitivityLow)
   }
 
   return items
 }
 
-export function getAdjustmentReasons({ phaseKey, trendSummary, userProfile, clinicalPreferences }) {
+export function getReadingAdjustmentReasons({
+  patternKey,
+  trendSummary,
+  userProfile,
+  clinicalPreferences,
+  sessionContext,
+}) {
   const reasons = []
 
   if (userProfile?.priorFastLabor) {
-    reasons.push('histórico de parto rápido')
+    reasons.push(SESSION_CONTEXT_COPY.adjustmentReasons.priorFastLabor)
   }
 
   if (clinicalPreferences?.alertSensitivity === 'high') {
-    reasons.push('sensibilidade alta de alerta')
+    reasons.push(SESSION_CONTEXT_COPY.adjustmentReasons.alertSensitivityHigh)
   }
 
-  if (
-    phaseKey === 'prodomos' &&
-    clinicalPreferences?.notifyDoulaEarly &&
-    trendSummary?.intervalTrend?.label === 'shortening'
-  ) {
-    reasons.push('preferência de aviso precoce para a doula')
+  if (sessionContext?.longTravelToHospital && patternKey !== 'transicao') {
+    reasons.push(SESSION_CONTEXT_COPY.adjustmentReasons.longTravelToHospital)
   }
 
   return reasons
+}
+
+export function getActionAdjustmentReasons({
+  patternKey,
+  trendSummary,
+  userProfile,
+  clinicalPreferences,
+  wellbeingSummary,
+}) {
+  const reasons = []
+
+  if (
+    patternKey === 'prodomos' &&
+    clinicalPreferences?.notifyDoulaEarly &&
+    trendSummary?.intervalTrend?.label === 'shortening'
+  ) {
+    reasons.push(SESSION_CONTEXT_COPY.adjustmentReasons.notifyDoulaEarly)
+  }
+
+  if (userProfile?.priorFastLabor) {
+    reasons.push(SESSION_CONTEXT_COPY.adjustmentReasons.priorFastLabor)
+  }
+
+  if (wellbeingSummary?.dominant === 'red') {
+    reasons.push('muita dor recente')
+  }
+
+  return reasons
+}
+
+export function getAdjustmentReasons(args) {
+  return getReadingAdjustmentReasons({
+    patternKey: args.phaseKey || args.patternKey,
+    trendSummary: args.trendSummary,
+    userProfile: args.userProfile,
+    clinicalPreferences: args.clinicalPreferences,
+    sessionContext: args.sessionContext,
+  })
 }
 
 export function formatAdjustmentCopy(reasons) {
