@@ -99,7 +99,7 @@ function ManualModal({ open, onClose }) {
               <li>Duração média recente.</li>
               <li>Intervalo médio recente.</li>
               <li>Tendência do padrão nas janelas mais recentes.</li>
-              <li>Fase provável e conduta sugerida.</li>
+              <li>Leitura do padrão e conduta sugerida.</li>
             </ul>
             <p>
               A análise principal continua priorizando o momento atual. O histórico ajuda como contexto,
@@ -110,7 +110,7 @@ function ManualModal({ open, onClose }) {
           <section>
             <h3>Como ler o topo de decisão</h3>
             <ul>
-              <li><strong>Fase provável</strong>: onde o padrão atual parece estar.</li>
+              <li><strong>Leitura do padrão</strong>: como o app interpreta o ritmo recente.</li>
               <li><strong>Conduta</strong>: a próxima ação prática sugerida.</li>
               <li><strong>Por quê</strong>: uma frase curta interpretando o ritmo ou alertando prioridade clínica.</li>
               <li><strong>Linha numérica</strong>: intervalo e duração médios para conferência rápida.</li>
@@ -122,20 +122,21 @@ function ManualModal({ open, onClose }) {
           </section>
 
           <section>
-            <h3>Como interpretar as fases</h3>
+            <h3>Como interpretar as leituras do padrão</h3>
             <ul>
               <li>
-                <strong>Pródromos / início</strong>: padrão ainda espaçado ou pouco consistente. Em geral,
-                a orientação é continuar em casa, descansar, comer e se hidratar.
+                <strong>Padrão inicial ou espaçado</strong>: ritmo ainda mais aberto ou pouco
+                consistente. Em geral, a orientação é continuar em casa, descansar, comer e se
+                hidratar.
               </li>
               <li>
-                <strong>Fase latente</strong>: contrações mais frequentes, muitas vezes já pedindo aviso à doula.
+                <strong>Padrão compatível com fase latente</strong>: contrações mais frequentes, que podem justificar aviso à doula e observação próxima.
               </li>
               <li>
-                <strong>Fase ativa provável</strong>: contrações mais próximas e organizadas. O app passa a sugerir preparar a ida.
+                <strong>Padrão mais intenso e mais próximo</strong>: contrações mais próximas e mais consistentes. O app pode sugerir preparar a ida.
               </li>
               <li>
-                <strong>Transição provável</strong>: intervalos muito curtos e urgência maior. O app indica ação imediata.
+                <strong>Padrão muito frequente</strong>: intervalos muito curtos e urgência maior. O app sugere procurar avaliação agora.
               </li>
             </ul>
           </section>
@@ -216,7 +217,7 @@ function ManualModal({ open, onClose }) {
               <li>Quantidade de contrações recentes.</li>
               <li>Duração média.</li>
               <li>Intervalo médio.</li>
-              <li>Fase provável.</li>
+              <li>Leitura do padrão.</li>
               <li>Conduta sugerida pelo app.</li>
             </ul>
             <p>O envio final depende da sua confirmação no WhatsApp.</p>
@@ -269,3 +270,7 @@ function ManualModal({ open, onClose }) {
 }
 
 export default ManualModal
+
+
+
+
