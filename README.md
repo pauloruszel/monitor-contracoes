@@ -28,14 +28,16 @@ O app continua sendo **offline-first** no modo normal. O Firebase é usado apena
 
 ### Leitura do momento
 
-- Fase provável do trabalho de parto
+- Fase provável do padrão atual
 - Conduta sugerida no topo da tela
 - Motivo curto para a recomendação
-- Tendência recente com base em janelas temporais
+- Linha de ajuste explicando quando contexto clínico influenciou a leitura
+- Tendência recente com base em janelas temporais de 1h e 2h
 
 ### Contexto clínico local
 
-- Observações da sessão
+- Contexto da sessão estruturado
+- Notas livres da sessão
 - Perfil da gestação
 - Preferências clínicas locais
 - Bem-estar durante a contração
@@ -55,6 +57,8 @@ O app continua sendo **offline-first** no modo normal. O Firebase é usado apena
 - Sessão remota temporária no Firebase Realtime Database
 - Link de leitura para a doula
 - Tela remota com atualização em tempo quase real
+- Resumo do contexto da sessão no modo doula
+- Mesma lógica de leitura clínica do modo principal
 - Encerramento e remoção da sessão compartilhada
 
 ### Alertas
@@ -69,13 +73,13 @@ O app continua sendo **offline-first** no modo normal. O Firebase é usado apena
 A tela principal foi reorganizada para reduzir carga cognitiva em uso real:
 
 - **Nível 1: decisão**
-  Topo decisório com fase provável, conduta sugerida, motivo curto e linha numérica de conferência.
+  Topo decisório com fase provável, conduta sugerida, motivo curto, ajuste por contexto e linha numérica de conferência.
 - **Nível 2: ação**
   Bloco de contração com cronômetro e botão principal para iniciar ou encerrar.
 - **Nível 3: contexto**
   Sinais de alerta, métricas resumidas e blocos colapsáveis para timeline, histórico, contexto da sessão e compartilhamento.
 
-O modo doula segue a mesma lógica visual, mas com foco em leitura remota em vez de operação.
+O modo doula segue a mesma lógica visual, mas com foco em leitura remota em vez de operação, incluindo contexto da sessão e explicação de ajustes ativos.
 
 ## Stack
 
@@ -179,9 +183,19 @@ sessions/
     contractions/
       {contractionId}/
     warningSignals/
-    sessionNotes
+    sessionContext
     userProfile
     clinicalPreferences
+```
+
+### Estrutura atual do contexto da sessão
+
+```text
+sessionContext/
+  homeObservationGuidance
+  longTravelToHospital
+  bagReady
+  notes
 ```
 
 ### Regras atuais
@@ -191,6 +205,7 @@ sessions/
 - `shareToken` para leitura pela doula
 - `writerToken` para escrita da usuária
 - Estrutura simples, sem joins nem backend adicional
+- Compatibilidade local com legado de `sessionNotes`, migrado para `sessionContext.notes`
 
 ## Testes
 
@@ -235,15 +250,15 @@ Variáveis necessárias:
 - O Firebase não substitui o modo offline; ele só complementa o compartilhamento.
 - O link da doula é somente leitura.
 - Alertas clínicos têm prioridade sobre o ritmo temporal.
-- O app não confirma estágio clínico do parto.
+- O app usa heurísticas explicáveis para leitura do padrão, não confirmação diagnóstica de fase.
 
 ## Roadmap Imediato
 
-- Refinar polimento visual após a nova hierarquia P5
-- Expandir regras clínicas sobre tendência e contexto
-- Evoluir proteção por token no Realtime Database
-- Melhorar cobertura de testes de interface e fluxo
-- Preparar exportação de sessão e relatório
+- Revisar o conteúdo clínico com validação profissional formal
+- Refinar regras de leitura temporal e reduzir linguagem excessivamente diagnóstica
+- Evoluir proteção por token e regras de acesso no Realtime Database
+- Melhorar cobertura de testes de interface e fluxo remoto
+- Preparar exportação de sessão e relatório estruturado para doula/equipe
 
 ## Licença
 
