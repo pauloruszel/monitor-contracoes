@@ -707,7 +707,7 @@ function MonitorPage() {
           onToggleOpen={() => setHistoryOpen((current) => !current)}
         />
         <CollapsibleSection
-          title={'Contexto da sess\u00e3o'}
+          title={'Contexto da sessão'}
           description={'Observa\u00e7\u00f5es, perfil e prefer\u00eancias que ajudam a interpretar melhor a evolu\u00e7\u00e3o.'}
           badge={'Fechado por padr\u00e3o'}
           open={sessionContextOpen}

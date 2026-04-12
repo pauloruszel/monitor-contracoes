@@ -19,7 +19,7 @@ function SessionContextSummaryCard({
       <section className="card">
         <div className="card-header">
           <div>
-            <h2>Contexto da sess\u00e3o</h2>
+            <h2>Contexto da sessão</h2>
             <p className="support-text compact-text">
               {mode === 'doula'
                 ? 'Ainda n\u00e3o h\u00e1 contexto adicional compartilhado nesta sess\u00e3o.'
@@ -36,7 +36,7 @@ function SessionContextSummaryCard({
     <section className="card">
       <div className="card-header">
         <div>
-          <h2>Contexto da sess\u00e3o</h2>
+          <h2>Contexto da sessão</h2>
           <p className="support-text compact-text">
             {mode === 'doula'
               ? 'Resumo do contexto compartilhado para interpretar melhor a evolução.'
