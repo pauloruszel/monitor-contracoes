@@ -1,4 +1,8 @@
-import { CLINICAL_PATTERN_COPY, STRONG_PATTERN_LIMITATION } from '../content/clinicalCopy'
+import {
+  CARE_PLAN_ADJUSTMENTS,
+  CLINICAL_PATTERN_COPY,
+  STRONG_PATTERN_LIMITATION,
+} from '../content/clinicalCopy'
 
 export const CARE_RECOMMENDATIONS = {
   prodomos: CLINICAL_PATTERN_COPY.prodomos.recommendation,
@@ -22,19 +26,18 @@ export function buildCarePlan({ patternKey, trendSummary, userProfile, clinicalP
     clinicalPreferences?.notifyDoulaEarly &&
     intervalTrend === 'shortening'
   ) {
-    base.title = 'Avisar a doula cedo'
-    base.message =
-      'O padrao ainda parece inicial, mas vale avisar a doula mais cedo e seguir observando.'
-    base.alertMessage = 'Padrao inicial encurtando. Avisar a doula cedo.'
+    base.title = CARE_PLAN_ADJUSTMENTS.notifyDoulaEarlyTitle
+    base.message = CARE_PLAN_ADJUSTMENTS.notifyDoulaEarlyMessage
+    base.alertMessage = CARE_PLAN_ADJUSTMENTS.notifyDoulaEarlyAlert
   }
 
   const interpretation = appendContext(base.secondary, [
-    intervalTrend === 'shortening' ? 'O padrao recente esta encurtando.' : '',
-    intervalTrend === 'spacing' ? 'O padrao recente esta mais espacado.' : '',
+    intervalTrend === 'shortening' ? CARE_PLAN_ADJUSTMENTS.intervalShortening : '',
+    intervalTrend === 'spacing' ? CARE_PLAN_ADJUSTMENTS.intervalSpacing : '',
     clinicalPreferences?.useFiveOneOne && patternKey === 'latente'
-      ? 'Observe se o padrao se aproxima do criterio 5-1-1.'
+      ? CARE_PLAN_ADJUSTMENTS.fiveOneOneHint
       : '',
-    userProfile?.priorFastLabor ? 'Como houve parto rapido anterior, mantenham atencao extra.' : '',
+    userProfile?.priorFastLabor ? CARE_PLAN_ADJUSTMENTS.priorFastLaborHint : '',
   ])
 
   return {

@@ -1,4 +1,5 @@
 import { getActionAdjustmentReasons, getReadingAdjustmentReasons } from '../utils/sessionContextUtils'
+import { OBSTETRIC_CONTEXT_ADJUSTMENTS } from '../content/clinicalCopy'
 
 function appendContext(text, additions) {
   const extras = additions.filter(Boolean)
@@ -20,22 +21,22 @@ export function applyObstetricContext({
   const regularity = trendSummary?.regularity?.label || ''
 
   if (pattern.key === 'prodomos' && intervalTrend === 'shortening') {
-    result.patternLabel = 'Padrao encurtando'
+    result.patternLabel = OBSTETRIC_CONTEXT_ADJUSTMENTS.patternLabelShortening
   }
 
   if (pattern.key === 'latente' && intervalTrend === 'spacing') {
-    result.patternLabel = 'Padrao espacando'
+    result.patternLabel = OBSTETRIC_CONTEXT_ADJUSTMENTS.patternLabelSpacing
   }
 
   result.description = appendContext(result.description, [
-    intervalTrend === 'shortening' ? 'A janela recente sugere intervalos encurtando.' : '',
-    durationTrend === 'increasing' ? 'A duracao media tambem esta aumentando.' : '',
-    regularity === 'regular' ? 'O padrao esta mais consistente.' : '',
-    userProfile?.priorFastLabor ? 'Como ja houve parto rapido, vale observar com atencao extra.' : '',
+    intervalTrend === 'shortening' ? OBSTETRIC_CONTEXT_ADJUSTMENTS.intervalShortening : '',
+    durationTrend === 'increasing' ? OBSTETRIC_CONTEXT_ADJUSTMENTS.durationIncreasing : '',
+    regularity === 'regular' ? OBSTETRIC_CONTEXT_ADJUSTMENTS.patternRegular : '',
+    userProfile?.priorFastLabor ? OBSTETRIC_CONTEXT_ADJUSTMENTS.priorFastLaborWarning : '',
     clinicalPreferences?.alertSensitivity === 'high'
-      ? 'A sensibilidade de alerta esta configurada para acompanhar mudancas mais cedo.'
+      ? OBSTETRIC_CONTEXT_ADJUSTMENTS.highAlertSensitivity
       : '',
-    sessionContext?.longTravelToHospital ? 'Ha deslocamento longo ate o hospital.' : '',
+    sessionContext?.longTravelToHospital ? OBSTETRIC_CONTEXT_ADJUSTMENTS.longTravelToHospital : '',
   ])
 
   return {

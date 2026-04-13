@@ -33,7 +33,7 @@ function getDefaultStorageState() {
   return {
     contractions: [],
     activeContraction: null,
-    doulaPhone: '5521981688856',
+    doulaPhone: import.meta.env.VITE_DEFAULT_DOULA_PHONE || '',
     alertsEnabled: false,
     lastAlertKey: '',
     sharedSession: null,

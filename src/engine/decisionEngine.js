@@ -5,7 +5,15 @@ import { buildCarePlan } from './carePlanEngine'
 import { applyObstetricContext } from './obstetricContextEngine'
 import { evaluateTemporalPattern } from './temporalPatternEngine'
 
+const PRECEDENCE_FALLBACK = {
+  key: 'temporal_pattern',
+  priority: 0,
+}
+
 function resolvePrecedence(context) {
+  if (!DECISION_PRECEDENCE || DECISION_PRECEDENCE.length === 0) {
+    return PRECEDENCE_FALLBACK
+  }
   return DECISION_PRECEDENCE.find((rule) => rule.matches(context)) || DECISION_PRECEDENCE.at(-1)
 }
 

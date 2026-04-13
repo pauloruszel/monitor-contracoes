@@ -13,7 +13,7 @@ describe('decisionEngine coverage branches', () => {
     vi.unmock('./temporalPatternEngine')
   })
 
-  it('explicita que a matriz vazia hoje quebra ao tentar usar o fallback de precedencia', async () => {
+  it('usa fallback seguro quando DECISION_PRECEDENCE está vazio', async () => {
     vi.doMock('../content/decisionCopy', () => ({
       DECISION_ENGINE_VERSION: 'test-version',
       DECISION_PRECEDENCE: [],
@@ -44,16 +44,16 @@ describe('decisionEngine coverage branches', () => {
     }))
 
     const { getSessionDecision } = await import('./decisionEngine')
-    expect(() =>
-      getSessionDecision({
-        temporalInput: {},
-        warningSignals: {},
-        sessionContext: {},
-        userProfile: {},
-        clinicalPreferences: {},
-        wellbeingSummary: {},
-      }),
-    ).toThrow("Cannot read properties of undefined (reading 'key')")
+    const result = getSessionDecision({
+      temporalInput: {},
+      warningSignals: {},
+      sessionContext: {},
+      userProfile: {},
+      clinicalPreferences: {},
+      wellbeingSummary: {},
+    })
+
+    expect(result.decision.precedenceKey).toBe('temporal_pattern')
   })
 
   it('preenche listas de ajustes com vazio quando o contexto nao retorna motivos', async () => {

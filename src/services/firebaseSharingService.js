@@ -97,19 +97,19 @@ export async function syncWarningSignals(sharedSession, warningSignals) {
   })
 }
 
-export async function syncSessionContext(sharedSession, sessionContext) {
+export async function syncSessionContext(sharedSession, contextBundle) {
   await update(ref(db, `sessions/${sharedSession.sessionId}`), {
     sessionContext: {
       ...defaultSessionContext,
-      ...(sessionContext.sessionContext || {}),
+      ...(contextBundle.sessionContext || {}),
     },
     userProfile: {
       ...defaultUserProfile,
-      ...(sessionContext.userProfile || {}),
+      ...(contextBundle.userProfile || {}),
     },
     clinicalPreferences: {
       ...defaultClinicalPreferences,
-      ...(sessionContext.clinicalPreferences || {}),
+      ...(contextBundle.clinicalPreferences || {}),
     },
     updatedAt: Date.now(),
   })
