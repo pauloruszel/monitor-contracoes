@@ -222,8 +222,8 @@ describe('phaseRules', () => {
 
     expect(result.patternLabel).toContain('encurtando')
     expect(result.description).toContain('intervalos encurtando')
-    expect(result.description).toContain('duracao')
-    expect(result.description).toContain('parto rapido')
+    expect(result.description).toContain('duração')
+    expect(result.description).toContain('parto rápido')
     expect(result.description).toContain('sensibilidade de alerta')
     expect(result.adjustmentReasons).toHaveLength(2)
     expect(result.adjustmentReasons[0]).toContain('parto')

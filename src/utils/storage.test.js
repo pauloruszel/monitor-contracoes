@@ -24,7 +24,7 @@ describe('storage', () => {
     expect(loadFromStorage()).toEqual({
       contractions: [],
       activeContraction: null,
-      doulaPhone: '5521981688856',
+      doulaPhone: '',
       alertsEnabled: false,
       lastAlertKey: '',
       sharedSession: null,
@@ -40,7 +40,7 @@ describe('storage', () => {
     expect(loadFromStorage()).toEqual({
       contractions: [],
       activeContraction: null,
-      doulaPhone: '5521981688856',
+      doulaPhone: '',
       alertsEnabled: false,
       lastAlertKey: '',
       sharedSession: null,
@@ -57,7 +57,7 @@ describe('storage', () => {
     expect(loadFromStorage()).toEqual({
       contractions: [],
       activeContraction: null,
-      doulaPhone: '5521981688856',
+      doulaPhone: '',
       alertsEnabled: false,
       lastAlertKey: '',
       sharedSession: null,

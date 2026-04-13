@@ -38,6 +38,7 @@ jobs:
           VITE_FIREBASE_PROJECT_ID: ${{ vars.VITE_FIREBASE_PROJECT_ID }}
           VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ vars.VITE_FIREBASE_MESSAGING_SENDER_ID }}
           VITE_FIREBASE_APP_ID: ${{ vars.VITE_FIREBASE_APP_ID }}
+          VITE_DEFAULT_DOULA_PHONE: ${{ vars.VITE_DEFAULT_DOULA_PHONE }}
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

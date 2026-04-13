@@ -259,10 +259,6 @@ function MonitorPage() {
     }),
     [contractions2h],
   )
-  const temporalMetrics = useMemo(
-    () => ({ metrics1h, metrics2h }),
-    [metrics1h, metrics2h],
-  )
   const trendSummary = useMemo(
     () => buildTrendSummary({ metrics1h, metrics2h }),
     [metrics1h, metrics2h],
@@ -302,7 +298,6 @@ function MonitorPage() {
     () => Object.values(warningSignals).some(Boolean),
     [warningSignals],
   )
-  void temporalMetrics
   const currentDuration = activeContraction
     ? getCurrentContractionDuration(activeContraction.start, now)
     : 0
@@ -400,7 +395,7 @@ function MonitorPage() {
     clearStorage()
     setContractions([])
     setActiveContraction(null)
-    setDoulaPhone('5521981688856')
+    setDoulaPhone(import.meta.env.VITE_DEFAULT_DOULA_PHONE || '')
     setAlertsEnabled(false)
     setLastAlertKey('')
     setSharedSession(null)
@@ -562,7 +557,7 @@ function MonitorPage() {
         trendSummary,
         formatDuration,
       }),
-    [decision, metrics, trendSummary, formatDuration],
+    [decision, metrics, trendSummary],
   )
 
   const phoneDigits = doulaPhone.replace(/\D/g, '')

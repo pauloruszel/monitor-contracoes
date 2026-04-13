@@ -80,8 +80,8 @@ describe('carePlanEngine', () => {
       clinicalPreferences: {},
     })
 
-    expect(result.interpretation).toContain('mais espacado')
-    expect(result.interpretation).toContain('parto rapido anterior')
+    expect(result.interpretation).toContain('mais espaçado')
+    expect(result.interpretation).toContain('parto rápido anterior')
   })
   it('usa prodomos como fallback quando a chave do padrao nao existe', () => {
     const result = buildCarePlan({

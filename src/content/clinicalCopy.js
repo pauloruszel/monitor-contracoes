@@ -94,3 +94,26 @@ export const WARNING_SIGNAL_COPY = {
     message: 'Nenhum sinal de alerta adicional foi marcado at\u00e9 agora.',
   },
 }
+
+export const CARE_PLAN_ADJUSTMENTS = {
+  notifyDoulaEarlyTitle: 'Avisar a doula cedo',
+  notifyDoulaEarlyMessage:
+    'O padrão ainda parece inicial, mas vale avisar a doula mais cedo e seguir observando.',
+  notifyDoulaEarlyAlert: 'Padrão inicial encurtando. Avisar a doula cedo.',
+  intervalShortening: 'O padrão recente está encurtando.',
+  intervalSpacing: 'O padrão recente está mais espaçado.',
+  fiveOneOneHint: 'Observe se o padrão se aproxima do critério 5-1-1.',
+  priorFastLaborHint: 'Como houve parto rápido anterior, mantenham atenção extra.',
+}
+
+export const OBSTETRIC_CONTEXT_ADJUSTMENTS = {
+  intervalShortening: 'A janela recente sugere intervalos encurtando.',
+  durationIncreasing: 'A duração média também está aumentando.',
+  patternRegular: 'O padrão está mais consistente.',
+  priorFastLaborWarning: 'Como já houve parto rápido, vale observar com atenção extra.',
+  highAlertSensitivity:
+    'A sensibilidade de alerta está configurada para acompanhar mudanças mais cedo.',
+  longTravelToHospital: 'Há deslocamento longo até o hospital.',
+  patternLabelShortening: 'Padrão encurtando',
+  patternLabelSpacing: 'Padrão espaçando',
+}
