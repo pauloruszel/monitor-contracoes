@@ -18,7 +18,7 @@
   "devDependencies": {
     "@vitest/coverage-v8": "^2.1.8",
     "jsdom": "^25.0.1",
-    "vite": "^5.4.10",
+    "vite": "^8.0.8",
     "vitest": "^2.1.8"
   }
 }
